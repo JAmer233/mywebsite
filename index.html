@@ -3,12 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boop Nose Factory</title>
-    <!-- You can add any additional meta tags, stylesheets, or scripts here -->
+    <title>Neural Network Animation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #controls {
+            margin: 10px;
+        }
+        #description {
+            width: 800px;
+            margin: 20px;
+            text-align: justify;
+        }
+    </style>
 </head>
 <body>
-    <h1>Boop Hair</h1>
-    <p>Little foot!</p>
-    <!-- Your web page content goes here -->
+    <div id="controls">
+        <button id="startPauseBtn" onclick="toggleSimulation()">Start</button>
+        <button onclick="resetSimulation()">Reset</button>
+        <input type="range" id="speedSlider" min="1" max="10" value="5">
+        <label for="speedSlider">Speed</label>
+    </div>
+    <div id="canvas-container"></div>
+    <div id="description">
+        <h2>Neural Network Visualization</h2>
+        <p>This diagram represents a simple feedforward neural network with 5 input neurons, two hidden layers of 8 neurons each, and 4 output neurons. The animation demonstrates how information flows through the network:</p>
+        <ul>
+            <li><strong>Input Layer:</strong> The leftmost column of 5 neurons. Click on these to toggle their values between 0 and 1, simulating input data.</li>
+            <li><strong>Hidden Layers:</strong> The two middle columns, each with 8 neurons. These process the input data.</li>
+            <li><strong>Output Layer:</strong> The rightmost column of 4 neurons, representing the network's final output.</li>
+            <li><strong>Connections:</strong> The gray lines between neurons represent the connections in the network.</li>
+            <li><strong>Green Particles:</strong> These represent the flow of information through the network.</li>
+        </ul>
+        <p>The number in each neuron represents its current activation value. As you interact with the input neurons and the simulation runs, you'll see how changes propagate through the network, affecting the hidden and output layers.</p>
+    </div>
+    <script>
+        let neurons = [];
+        let connections = [];
+        let particles = [];
+        let isRunning = false;
+        let animationSpeed;
+
+        function setup() {
+            let canvas = createCanvas(800, 500);
+            canvas.parent('canvas-container');
+            setupNeurons();
+            setupConnections();
+            animationSpeed = document.getElementById('speedSlider');
+        }
+
+        function draw() {
+            background(240);
+            drawConnections();
+            drawNeurons();
+            drawLayerLabels();
+            if (isRunning) {
+                updateAnimation();
+            }
+            drawParticles();
+        }
+
+        function setupNeurons() {
+            // Input layer
+            for (let i = 0; i < 5; i++) {
+                neurons.push({x: 100, y: 100 + i * 75, layer: 0, value: 0});
+            }
+            // Hidden layers
+            for (let layer = 1; layer <= 2; layer++) {
+                for (let i = 0; i < 8; i++) {
+                    neurons.push({x: 300 + (layer - 1) * 200, y: 75 + i * 50, layer: layer, value: 0});
+                }
+            }
+            // Output layer
+            for (let i = 0; i < 4; i++) {
+                neurons.push({x: 700, y: 150 + i * 75, layer: 3, value: 0});
+            }
+        }
+
+        function setupConnections() {
+            for (let i = 0; i < neurons.length; i++) {
+                for (let j = 0; j < neurons.length; j++) {
+                    if (neurons[i].layer < neurons[j].layer) {
+                        connections.push({from: i, to: j, weight: random(-1, 1)});
+                    }
+                }
+            }
+        }
+
+        function drawNeurons() {
+            for (let neuron of neurons) {
+                fill(255);
+                stroke(0);
+                ellipse(neuron.x, neuron.y, 30, 30);
+                
+                fill(0);
+                textAlign(CENTER, CENTER);
+                textSize(10);
+                text(neuron.value.toFixed(2), neuron.x, neuron.y);
+            }
+        }
+
+        function drawConnections() {
+            for (let conn of connections) {
+                let from = neurons[conn.from];
+                let to = neurons[conn.to];
+                stroke(200);
+                line(from.x, from.y, to.x, to.y);
+            }
+        }
+
+        function drawLayerLabels() {
+            fill(0);
+            textAlign(CENTER, BOTTOM);
+            textSize(14);
+            text("Input Layer", 100, 50);
+            text("Hidden Layer 1", 300, 50);
+            text("Hidden Layer 2", 500, 50);
+            text("Output Layer", 700, 50);
+        }
+
+        function updateAnimation() {
+            // Update neuron values
+            for (let i = 0; i < neurons.length; i++) {
+                if (neurons[i].layer === 0) continue; // Skip input layer
+                let sum = 0;
+                for (let conn of connections) {
+                    if (conn.to === i) {
+                        sum += neurons[conn.from].value * conn.weight;
+                    }
+                }
+                neurons[i].value = sigmoid(sum);
+            }
+
+            // Create new particles
+            for (let conn of connections) {
+                if (random() < 0.1 * animationSpeed.value / 10) {
+                    particles.push({
+                        x: neurons[conn.from].x,
+                        y: neurons[conn.from].y,
+                        targetX: neurons[conn.to].x,
+                        targetY: neurons[conn.to].y,
+                        progress: 0
+                    });
+                }
+            }
+        }
+
+        function drawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.progress += 0.02 * animationSpeed.value / 5;
+                if (p.progress > 1) {
+                    particles.splice(i, 1);
+                } else {
+                    let x = lerp(p.x, p.targetX, p.progress);
+                    let y = lerp(p.y, p.targetY, p.progress);
+                    fill(0, 255, 0);
+                    noStroke();
+                    ellipse(x, y, 5, 5);
+                }
+            }
+        }
+
+        function sigmoid(x) {
+            return 1 / (1 + Math.exp(-x));
+        }
+
+        function resetSimulation() {
+            for (let neuron of neurons) {
+                neuron.value = 0;
+            }
+            particles = [];
+        }
+
+        function toggleSimulation() {
+            isRunning = !isRunning;
+            document.getElementById('startPauseBtn').textContent = isRunning ? 'Pause' : 'Start';
+        }
+
+        function mousePressed() {
+            // Check if mouse is over an input neuron
+            for (let i = 0; i < 5; i++) {
+                let d = dist(mouseX, mouseY, neurons[i].x, neurons[i].y);
+                if (d < 15) {
+                    neurons[i].value = 1 - neurons[i].value; // Toggle between 0 and 1
+                }
+            }
+        }
+    </script>
 </body>
 </html>
