@@ -43,6 +43,73 @@
             <li><strong>Green Particles:</strong> These represent the flow of information through the network.</li>
         </ul>
         <p>The number in each neuron represents its current activation value. As you interact with the input neurons and the simulation runs, you'll see how changes propagate through the network, affecting the hidden and output layers.</p>
+        <p># Understanding Input Propagation in Neural Networks
+
+## What Changing Inputs Does
+
+When you change an input in the neural network visualization:
+
+1. You're simulating the introduction of different data to the network.
+2. This change initiates a cascade of updates through the entire network.
+3. The effects propagate from the input layer, through the hidden layers, to the output layer.
+
+## How It Updates Each Layer
+
+### 1. Input Layer
+- Changing an input neuron's value (toggling between 0 and 1) represents providing different input data.
+- In real-world applications, inputs could be features of a dataset (e.g., pixel values in an image, or characteristics of a sample).
+
+### 2. Hidden Layers
+- Each neuron in a hidden layer receives inputs from all neurons in the previous layer.
+- For each hidden neuron:
+  1. It calculates a weighted sum of its inputs.
+  2. This sum is passed through an activation function (in our case, the sigmoid function).
+  3. The result becomes the neuron's output value.
+
+### 3. Output Layer
+- The process for the output layer is similar to the hidden layers.
+- Each output neuron computes its value based on inputs from the last hidden layer.
+
+## Why It Updates
+
+The network updates in response to input changes because:
+
+1. Neural networks are designed to transform input data into meaningful output.
+2. Each connection (synapse) has a weight that determines its importance.
+3. The network "learns" by adjusting these weights to produce the correct output for given inputs.
+
+## What It Represents
+
+This process represents the fundamental operation of neural networks:
+
+1. **Information Processing**: The network is processing information, transforming raw input data into a more abstract or task-specific representation.
+
+2. **Feature Extraction**: Hidden layers often represent increasingly complex features or patterns found in the input data.
+
+3. **Decision Making**: The output layer typically represents the network's decision or prediction based on the input.
+
+4. **Non-linearity**: The activation functions (like sigmoid) introduce non-linearity, allowing the network to learn complex, non-linear relationships in data.
+
+5. **Distributed Representation**: Information is stored across many neurons and connections, not in any single place.
+
+## Real-World Analogy
+
+You can think of this process like a company:
+- Input layer: Raw data or initial reports coming into the company.
+- Hidden layers: Different departments processing and refining the information.
+- Output layer: Executive decision based on the processed information.
+
+Changing an input is like changing a key piece of information in an initial report. This change affects how each department processes the data, ultimately influencing the final decision.
+
+## Importance in Machine Learning
+
+This process is crucial because it allows neural networks to:
+1. Learn complex patterns in data.
+2. Make predictions or classifications based on new, unseen inputs.
+3. Generalize from training data to perform well on new, similar data.
+
+Understanding this process helps in designing, training, and interpreting neural networks for various machine learning tasks.</p>
+    
     </div>
     <script>
         let neurons = [];
