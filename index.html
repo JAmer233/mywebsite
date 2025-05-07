@@ -2,274 +2,3714 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Network Animation</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <title>Soccer Coach Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
+	    html, body {
+			margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+			position: fixed;
+        }
+		
+        :root {
+            --primary: #1e88e5;
+            --primary-dark: #1565c0;
+            --primary-light: #bbdefb;
+            --secondary: #26a69a;
+            --danger: #f44336;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --text: #263238;
+            --light-bg: #f5f5f5;
+            --dark-bg: #263238;
+            --light-text: #ffffff;
+            --field-grass: #32CD32;
+            --field-line: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light-bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0.5rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .logo svg {
+            margin-right: 0.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 0.5rem;
+            background-color: white;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            background-color: var(--primary-light);
+        }
+
+        .tab:hover:not(.active) {
+            border-bottom: 2px solid #ccc;
+            background-color: #f9f9f9;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .toolbar-section {
+            border-right: 1px solid #ddd;
+            padding-right: 0.75rem;
+            margin-right: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .toolbar-section:last-child {
+            border-right: none;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        button {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        button:hover {
+            background: #f0f0f0;
+        }
+
+        button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary-dark);
+        }
+
+        button svg {
+            margin-right: 0.25rem;
+        }
+
+        select, input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 1rem;
+            height: calc(100vh - 180px);
+            min-height: 500px;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
+        }
+
+        .sidebar-title {
+            padding: 0.75rem;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            background: var(--light-bg);
+        }
+
+        .sidebar-content {
+            padding: 0.5rem;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-item:hover {
+            background: var(--light-bg);
+        }
+
+        .sidebar-item.active {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-left: 3px solid var(--primary);
+        }
+
+        #canvas-container {
+            position: relative;
+            flex-grow: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .field-controls {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            margin-top: 0.75rem;
+            padding: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #666;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
             align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dialog-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dialog {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .dialog-header {
+            padding: 1rem;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dialog-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .dialog-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .dialog-content {
+            padding: 1rem;
+        }
+
+        .dialog-footer {
+            padding: 1rem;
+            border-top: 1px solid #ddd;
+            text-align: right;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: var(--text);
+        }
+
+        .animation-controls {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .grid-item {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .grid-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        .grid-item-img {
+            height: 100px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grid-item-title {
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.875rem;
+            border-top: 1px solid #ddd;
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 6px;
+            z-index: 1;
+            width: auto;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Help panel styles */
+        #help-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
             height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
+            background: white;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+            padding: 1rem;
         }
-        #controls {
-            margin: 10px;
+
+        #help-panel.open {
+            right: 0;
         }
-        #description {
-            width: 1200px;
-            margin: 20px;
-            text-align: justify;
+
+        #help-toggle {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1001;
+            cursor: pointer;
+        }
+
+        .help-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .help-section h3 {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--primary);
+        }
+
+        .help-item {
+            display: flex;
+            margin-bottom: 0.75rem;
+            align-items: center;
+        }
+
+        .help-icon {
+            margin-right: 0.75rem;
+            width: 2rem;
+            text-align: center;
+        }
+
+        /* Status message */
+        #status-message {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #status-message.show {
+            opacity: 1;
+        }
+
+        /* Color picker dialog */
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .color-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+
+        .color-option.selected {
+            border: 2px solid black;
+            box-shadow: 0 0 0 2px white;
+        }
+
+		.color-indicator {
+			width: 12px;
+			height: 12px;
+			border-radius: 50%;
+			position: absolute;
+			bottom: 3px;
+			right: 3px;
+			border: 1px solid rgba(0,0,0,0.2);
+			margin-left: 5px;
+			z-index: 5; /* Ensure it's above other content */
+		}
+
+		button {
+			padding: 0.5rem 0.7rem 0.5rem 0.5rem;
+			position: relative;
+			min-width: 80px; /* Ensure minimum width to prevent overlap */
+		}
+
+		button span.color-indicator:hover {
+			transform: scale(1.3);
+			box-shadow: 0 0 3px rgba(0,0,0,0.5);
+			cursor: pointer;
+		}
+
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-height: 200px;
+            }
+            
+            #canvas-container {
+                height: 60vh;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .toolbar-section {
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+                padding-bottom: 0.5rem;
+                margin-bottom: 0.5rem;
+                padding-right: 0;
+                margin-right: 0;
+            }
+            
+            .toolbar-section:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+                margin-bottom: 0;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .tabs {
+                margin-top: 0.5rem;
+                width: 100%;
+                overflow-x: auto;
+            }
+            
+            #help-panel {
+                width: 80%;
+                right: -80%;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <button id="startPauseBtn" onclick="toggleSimulation()">Start</button>
-        <button onclick="resetSimulation()">Reset</button>
-        <input type="range" id="speedSlider" min="1" max="10" value="3">
-        <label for="speedSlider">Speed</label>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 2a4.5 4.5 0 0 0 0 9 4.5 4.5 0 0 1 0 9 10 10 0 0 0 0-18z"/>
+                    <line x1="12" y1="2" x2="12" y2="22"/>
+                </svg>
+                Soccer Coach Pro
+            </div>
+            <div>
+                <button id="save-btn" class="btn btn-primary tooltip" data-tooltip="Save your current diagram">Save</button>
+                <button id="load-btn" class="btn btn-secondary tooltip" data-tooltip="Load a saved diagram">Load</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="whiteboard">Whiteboard</div>
+            <div class="tab" data-tab="formations">Formations</div>
+            <div class="tab" data-tab="plays">Plays & Drills</div>
+            <div class="tab" data-tab="settings">Settings</div>
+        </div>
+
+        <div class="toolbar">
+		<div class="toolbar-section">
+        <button id="selectMode" class="active tooltip" data-tooltip="Select and move objects">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+                <path d="M13 13l6 6"/>
+            </svg>
+            Select
+        </button>
+        <button id="remove" class="tooltip" data-tooltip="Remove selected object">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+            Remove
+        </button>
+        <button id="clear" class="tooltip" data-tooltip="Clear all objects from field">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3v18h18"/>
+                <path d="M3 12h18"/>
+            </svg>
+            Clear All
+        </button>
+		</div>
+            
+		<div class="toolbar-section">
+        <button id="changeColor" class="tooltip" data-tooltip="Change color of selected object">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="6"/>
+                <circle cx="12" cy="12" r="2"/>
+            </svg>
+            Color
+        </button>
+        <button id="drawLine" class="tooltip" data-tooltip="Draw a line">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Line
+            <span class="color-indicator" style="background-color: #000000;"></span>
+        </button>
+        <button id="drawArrow" class="tooltip" data-tooltip="Draw an arrow for movement">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+            </svg>
+            Arrow
+            <span class="color-indicator" style="background-color: #000000;"></span>
+        </button>
+        <button id="dribbleArrow" class="tooltip" data-tooltip="Draw a dashed arrow for dribbling">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 2">
+                <path d="M5 12h14"/>
+                <path d="M12 5l7 7-7 7"/>
+            </svg>
+            Dribble
+            <span class="color-indicator" style="background-color: #000000;"></span>
+        </button>
+        <button id="passArrow" class="tooltip" data-tooltip="Draw a curved arrow for passing">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 9l-6 6 6 6"/>
+                <path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+            </svg>
+            Pass
+            <span class="color-indicator" style="background-color: #000000;"></span>
+        </button>
+		</div>
+            
+		<div class="toolbar-section">
+        <button id="homePlayer" class="tooltip" data-tooltip="Add a home team player">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Home
+            <span class="color-indicator" style="background-color: #ff0000;"></span>
+        </button>
+        <button id="awayPlayer" class="tooltip" data-tooltip="Add an away team player">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Away
+            <span class="color-indicator" style="background-color: #0000ff;"></span>
+        </button>
+        <button id="neutralPlayer" class="tooltip" data-tooltip="Add a coach or neutral player">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Coach
+            <span class="color-indicator" style="background-color: #ffff00;"></span>
+        </button>
+        <button id="addNumber" class="tooltip" data-tooltip="Add/change player number">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="9" x2="20" y2="9"/>
+                <line x1="4" y1="15" x2="20" y2="15"/>
+                <line x1="10" y1="3" x2="8" y2="21"/>
+                <line x1="16" y1="3" x2="14" y2="21"/>
+            </svg>
+            Number
+        </button>
+        <button id="addPosition" class="tooltip" data-tooltip="Add/change player position">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            Position
+        </button>
     </div>
-    <div id="canvas-container"></div>
-    <div id="description">
-        <h2>Neural Network Visualization</h2>
-        <p>This diagram represents a simple feedforward neural network with 5 input neurons, two hidden layers of 8 neurons each, and 4 output neurons. The animation demonstrates how information flows through the network:</p>
-        <ul>
-            <li><strong>Input Layer:</strong> The leftmost column of 5 neurons. Click on these to toggle their values between 0 and 1, simulating input data.</li>
-            <li><strong>Hidden Layers:</strong> The two middle columns, each with 8 neurons. These process the input data.</li>
-            <li><strong>Output Layer:</strong> The rightmost column of 4 neurons, representing the network's final output.</li>
-            <li><strong>Connections:</strong> The gray lines between neurons represent the connections in the network.</li>
-            <li><strong>Green Particles:</strong> These represent the flow of information through the network.</li>
-        </ul>
-        <p>The number in each neuron represents its current activation value. As you interact with the input neurons and the simulation runs, you'll see how changes propagate through the network, affecting the hidden and output layers.</p>
-
-        <h1>Understanding Input Propagation in Neural Networks</h1>
-
-    <h2>What Changing Inputs Does</h2>
-    <p>When you change an input in the neural network visualization:</p>
-    <ol>
-        <li>You're simulating the introduction of different data to the network.</li>
-        <li>This change initiates a cascade of updates through the entire network.</li>
-        <li>The effects propagate from the input layer, through the hidden layers, to the output layer.</li>
-    </ol>
-
-    <h2>How It Updates Each Layer</h2>
-
-    <h3>1. Input Layer</h3>
-    <ul>
-        <li>Changing an input neuron's value (toggling between 0 and 1) represents providing different input data.</li>
-        <li>In real-world applications, inputs could be features of a dataset (e.g., pixel values in an image, or characteristics of a sample).</li>
-    </ul>
-
-    <h3>2. Hidden Layers</h3>
-    <ul>
-        <li>Each neuron in a hidden layer receives inputs from all neurons in the previous layer.</li>
-        <li>For each hidden neuron:
-            <ol>
-                <li>It calculates a weighted sum of its inputs.</li>
-                <li>This sum is passed through an activation function (in our case, the sigmoid function).</li>
-                <li>The result becomes the neuron's output value.</li>
-            </ol>
-        </li>
-    </ul>
-
-    <h3>3. Output Layer</h3>
-    <ul>
-        <li>The process for the output layer is similar to the hidden layers.</li>
-        <li>Each output neuron computes its value based on inputs from the last hidden layer.</li>
-    </ul>
-
-    <h2>Why It Updates</h2>
-    <p>The network updates in response to input changes because:</p>
-    <ol>
-        <li>Neural networks are designed to transform input data into meaningful output.</li>
-        <li>Each connection (synapse) has a weight that determines its importance.</li>
-        <li>The network "learns" by adjusting these weights to produce the correct output for given inputs.</li>
-    </ol>
-
-    <h2>What It Represents</h2>
-    <p>This process represents the fundamental operation of neural networks:</p>
-    <ol>
-        <li><strong>Information Processing</strong>: The network is processing information, transforming raw input data into a more abstract or task-specific representation.</li>
-        <li><strong>Feature Extraction</strong>: Hidden layers often represent increasingly complex features or patterns found in the input data.</li>
-        <li><strong>Decision Making</strong>: The output layer typically represents the network's decision or prediction based on the input.</li>
-        <li><strong>Non-linearity</strong>: The activation functions (like sigmoid) introduce non-linearity, allowing the network to learn complex, non-linear relationships in data.</li>
-        <li><strong>Distributed Representation</strong>: Information is stored across many neurons and connections, not in any single place.</li>
-    </ol>
-
-    <h2>Real-World Analogy</h2>
-    <p>You can think of this process like a company:</p>
-    <ul>
-        <li>Input layer: Raw data or initial reports coming into the company.</li>
-        <li>Hidden layers: Different departments processing and refining the information.</li>
-        <li>Output layer: Executive decision based on the processed information.</li>
-    </ul>
-    <p>Changing an input is like changing a key piece of information in an initial report. This change affects how each department processes the data, ultimately influencing the final decision.</p>
-
-    <h2>Importance in Machine Learning</h2>
-    <p>This process is crucial because it allows neural networks to:</p>
-    <ol>
-        <li>Learn complex patterns in data.</li>
-        <li>Make predictions or classifications based on new, unseen inputs.</li>
-        <li>Generalize from training data to perform well on new, similar data.</li>
-    </ol>
-    <p>Understanding this process helps in designing, training, and interpreting neural networks for various machine learning tasks.</p>
     
+    <div class="toolbar-section">
+        <button id="ball" class="tooltip" data-tooltip="Add a soccer ball">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            </svg>
+            Ball
+        </button>
+        <button id="cone" class="tooltip" data-tooltip="Add a training cone">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 22h20L12 2z"/>
+            </svg>
+            Cone
+            <span class="color-indicator" style="background-color: #FFA500;"></span>
+        </button>
+        <button id="goal" class="tooltip" data-tooltip="Add a portable goal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14"/>
+                <path d="M3 8v14h18"/>
+            </svg>
+            Goal
+        </button>
+        <button id="area" class="tooltip" data-tooltip="Draw a rectangle for zones or areas">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            </svg>
+            Area
+            <span class="color-indicator" style="background-color: rgba(0,0,0,0.2);"></span>
+        </button>
+        <button id="text" class="tooltip" data-tooltip="Add text labels to the diagram">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 7 4 4 20 4 20 7"/>
+                <line x1="9" y1="20" x2="15" y2="20"/>
+                <line x1="12" y1="4" x2="12" y2="20"/>
+            </svg>
+            Text
+        </button>
+		</div>
+	</div>
+		
+        <div class="main-content">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-title" id="sidebar-title">Formations</div>
+                <div class="sidebar-content" id="sidebar-content">
+                    <!-- Content will be dynamically populated -->
+                </div>
+            </div>
+            <div id="canvas-container">
+                <canvas id="field"></canvas>
+                <div class="field-controls">
+                    <button id="zoomIn" class="tooltip" data-tooltip="Zoom in">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            <line x1="11" y1="8" x2="11" y2="14"/>
+                            <line x1="8" y1="11" x2="14" y2="11"/>
+                        </svg>
+                    </button>
+                    <button id="zoomOut" class="tooltip" data-tooltip="Zoom out">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            <line x1="8" y1="11" x2="14" y2="11"/>
+                        </svg>
+                    </button>
+                    <button id="resetView" class="tooltip" data-tooltip="Reset view">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 2v6h6"/>
+                            <path d="M3 6a9 9 0 0 1 9 9 9 9 0 0 0 9 9"/>
+                            <path d="M21 16v6h-6"/>
+                        </svg>
+                    </button>
+                    <select id="fieldType" class="tooltip" data-tooltip="Change field type">
+                        <option value="fullField">Full Field</option>
+                        <option value="halfField">Half Field</option>
+                    </select>
+                </div>
+                <div class="animation-controls" id="animation-controls">
+                    <button id="playAnimation" class="tooltip" data-tooltip="Play animation">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                    </button>
+                    <button id="pauseAnimation" class="tooltip" data-tooltip="Pause animation">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="6" y="4" width="4" height="16"/>
+                            <rect x="14" y="4" width="4" height="16"/>
+                        </svg>
+                    </button>
+                    <button id="resetAnimation" class="tooltip" data-tooltip="Reset animation">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 2v6h6"/>
+                            <path d="M3 6a9 9 0 0 1 9 9 9 9 0 0 0 9 9"/>
+                            <path d="M21 16v6h-6"/>
+                        </svg>
+                    </button>
+                    <input type="range" id="animationSpeed" min="0.5" max="2" step="0.1" value="1" class="tooltip" data-tooltip="Animation speed">
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>Soccer Coach Pro - Version 2.0</div>
+            <div>Designed for youth soccer coaches</div>
+        </div>
     </div>
+
+    <!-- Status message -->
+    <div id="status-message"></div>
+
+    <!-- Help button and panel -->
+    <button id="help-toggle">?</button>
+    <div id="help-panel">
+        <h2>Soccer Coach Pro Help</h2>
+        <p>Welcome to Soccer Coach Pro, your complete tactical board for coaching soccer.</p>
+        
+        <div class="help-section">
+            <h3>Getting Started</h3>
+            <p>Use the tabs at the top to switch between different functions:</p>
+            <ul>
+                <li><strong>Whiteboard:</strong> Create custom diagrams</li>
+                <li><strong>Formations:</strong> Load preset formations</li>
+                <li><strong>Plays & Drills:</strong> Load preset plays and training drills</li>
+                <li><strong>Settings:</strong> Customize your experience</li>
+            </ul>
+        </div>
+        
+        <div class="help-section">
+            <h3>Basic Tools</h3>
+            <div class="help-item">
+                <div class="help-icon">🖱️</div>
+                <div>Click the <strong>Select</strong> tool to move objects around</div>
+            </div>
+            <div class="help-item">
+                <div class="help-icon">👤</div>
+                <div>Add players by clicking the <strong>Home</strong>, <strong>Away</strong>, or <strong>Coach</strong> buttons</div>
+            </div>
+            <div class="help-item">
+                <div class="help-icon">⚽</div>
+                <div>Add balls, cones, and goals from the toolbar</div>
+            </div>
+            <div class="help-item">
+                <div class="help-icon">➡️</div>
+                <div>Use arrows to show player movement, passing, and dribbling</div>
+            </div>
+        </div>
+        
+        <div class="help-section">
+            <h3>Working with Players</h3>
+            <ol>
+                <li>Select a player by clicking on them with the Select tool</li>
+                <li>Add a number with the <strong>Number</strong> button</li>
+                <li>Add a position with the <strong>Position</strong> button</li>
+                <li>Change color with the <strong>Color</strong> button</li>
+            </ol>
+        </div>
+        
+        <div class="help-section">
+            <h3>Creating Animations</h3>
+            <ol>
+                <li>Create your initial setup</li>
+                <li>Click "Add Frame" in the Animation tab</li>
+                <li>Move players to their next positions</li>
+                <li>Repeat steps 2-3 for each step in your play</li>
+                <li>Use the animation controls to play through the sequence</li>
+            </ol>
+        </div>
+        
+        <div class="help-section">
+            <h3>Saving Your Work</h3>
+            <p>Click the <strong>Save</strong> button to store your current diagram. Give it a name and select a category.</p>
+            <p>Use the <strong>Load</strong> button to open saved diagrams or preset formations and drills.</p>
+        </div>
+        
+        <div class="help-section">
+            <h3>Tips</h3>
+            <ul>
+                <li>Use the mouse wheel or pinch gestures to zoom in/out</li>
+                <li>Hold Shift while drawing lines to create perfectly straight lines</li>
+                <li>Double-click on a player to quickly add a number</li>
+                <li>Right-click on an object to see more options</li>
+            </ul>
+        </div>
+		
+		<div class="help-section">
+		<h3>Working with Animations</h3>
+		<ol>
+			<li>Set up your initial position</li>
+			<li>Click "Capture Frame" to save the current state</li>
+			<li>Move players to their next positions</li>
+			<li>Click "Capture Frame" again to add another frame</li>
+			<li>Click "Run Animation" to play the sequence</li>
+			<li>Use the animation controls to adjust playback</li>
+		</ol>
+		<p><strong>Note:</strong> To clear animations, click "Clear All" which removes both shapes and animation frames.</p>
+		</div>
+    </div>
+
+    <!-- Dialogs -->
+    <div class="dialog-overlay" id="save-dialog">
+        <div class="dialog">
+            <div class="dialog-header">
+                <div class="dialog-title">Save Diagram</div>
+                <button class="dialog-close">&times;</button>
+            </div>
+            <div class="dialog-content">
+                <div class="form-group">
+                    <label for="save-name">Name</label>
+                    <input type="text" id="save-name" class="form-control" placeholder="My Formation">
+                </div>
+                <div class="form-group">
+                    <label for="save-category">Category</label>
+                    <select id="save-category" class="form-control">
+                        <option value="formations">Formation</option>
+                        <option value="plays">Play</option>
+                        <option value="drills">Drill</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="save-description">Description (optional)</label>
+                    <textarea id="save-description" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary dialog-close">Cancel</button>
+                <button class="btn btn-primary" id="save-confirm">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-overlay" id="load-dialog">
+        <div class="dialog">
+            <div class="dialog-header">
+                <div class="dialog-title">Load Diagram</div>
+                <button class="dialog-close">&times;</button>
+            </div>
+            <div class="dialog-content">
+                <div class="form-group">
+                    <label for="load-category">Category</label>
+                    <select id="load-category" class="form-control">
+                        <option value="all">All</option>
+                        <option value="formations">Formations</option>
+                        <option value="plays">Plays</option>
+                        <option value="drills">Drills</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div id="load-items" class="grid">
+                    <!-- Items will be dynamically added here -->
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary dialog-close">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-overlay" id="color-dialog">
+        <div class="dialog">
+            <div class="dialog-header">
+                <div class="dialog-title">Choose Color</div>
+                <button class="dialog-close">&times;</button>
+            </div>
+            <div class="dialog-content">
+                <div class="color-options">
+                    <div class="color-option" style="background-color: #ff0000;" data-color="#ff0000"></div>
+                    <div class="color-option" style="background-color: #0000ff;" data-color="#0000ff"></div>
+                    <div class="color-option" style="background-color: #00ff00;" data-color="#00ff00"></div>
+                    <div class="color-option" style="background-color: #ffff00;" data-color="#ffff00"></div>
+                    <div class="color-option" style="background-color: #ff00ff;" data-color="#ff00ff"></div>
+                    <div class="color-option" style="background-color: #00ffff;" data-color="#00ffff"></div>
+                    <div class="color-option" style="background-color: #ff8000;" data-color="#ff8000"></div>
+                    <div class="color-option" style="background-color: #8000ff;" data-color="#8000ff"></div>
+                    <div class="color-option" style="background-color: #000000;" data-color="#000000"></div>
+                    <div class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary dialog-close">Cancel</button>
+                <button class="btn btn-primary" id="color-confirm">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-overlay" id="text-dialog">
+        <div class="dialog">
+            <div class="dialog-header">
+                <div class="dialog-title">Add Text</div>
+                <button class="dialog-close">&times;</button>
+            </div>
+            <div class="dialog-content">
+                <div class="form-group">
+                    <label for="text-content">Text</label>
+                    <input type="text" id="text-content" class="form-control" placeholder="Enter text...">
+                </div>
+                <div class="form-group">
+                    <label for="text-size">Font Size</label>
+                    <select id="text-size" class="form-control">
+                        <option value="12">Small</option>
+                        <option value="16" selected>Medium</option>
+                        <option value="24">Large</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="text-color">Color</label>
+                    <select id="text-color" class="form-control">
+                        <option value="#000000">Black</option>
+                        <option value="#ff0000">Red</option>
+                        <option value="#0000ff">Blue</option>
+                        <option value="#008000">Green</option>
+                    </select>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary dialog-close">Cancel</button>
+                <button class="btn btn-primary" id="text-confirm">Add</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        let neurons = [];
-        let connections = [];
-        let particles = [];
-        let isRunning = false;
-        let animationSpeed;
+        // Prevents problematic resize loops
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                // Only call resizeCanvas once after resize is done
+                if (window.soccerCoachApp) {
+                    window.soccerCoachApp.resizeCanvas();
+                }
+            }, 100);
+        });
+		
+		// Constants
+        const FIELD_TYPES = {
+            fullField: {
+                width: 100,
+                height: 70,
+                penaltyAreaWidth: 16.5,
+                penaltyAreaHeight: 40.3,
+                goalAreaWidth: 5.5,
+                goalAreaHeight: 18.3,
+                centerCircleRadius: 9.15,
+                penaltySpotDistance: 11,
+                cornerRadius: 1
+            },
+            halfField: {
+                width: 50,
+                height: 70,
+                penaltyAreaWidth: 16.5,
+                penaltyAreaHeight: 40.3,
+                goalAreaWidth: 5.5,
+                goalAreaHeight: 18.3,
+                centerCircleRadius: 9.15,
+                penaltySpotDistance: 11,
+                cornerRadius: 1
+            },
+        };
 
-        function setup() {
-            let canvas = createCanvas(800, 500);
-            canvas.parent('canvas-container');
-            setupNeurons();
-            setupConnections();
-            animationSpeed = document.getElementById('speedSlider');
-        }
+        // Default colors
+        const DEFAULT_COLORS = {
+            homePlayer: '#ff0000',
+            awayPlayer: '#0000ff',
+            neutralPlayer: '#ffff00',
+            line: '#000000',
+            arrow: '#000000',
+            dribbleArrow: '#000000',
+            passArrow: '#000000',
+            cone: '#FFA500',
+            area: 'rgba(0,0,0,0.2)',
+            text: '#000000'
+        };
 
-        function draw() {
-            background(240);
-            drawConnections();
-            drawNeurons();
-            drawLayerLabels();
-            if (isRunning) {
-                updateAnimation();
+        // Shape classes
+        class Player {
+            constructor(x, y, color, number = '', position = '') {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = 15;
+                this.number = number;
+                this.position = position;
+                this.type = 'player';
+                this.selected = false;
             }
-            drawParticles();
-        }
 
-        function setupNeurons() {
-            // Input layer
-            for (let i = 0; i < 5; i++) {
-                neurons.push({x: 100, y: 100 + i * 75, layer: 0, value: 0});
-            }
-            // Hidden layers
-            for (let layer = 1; layer <= 2; layer++) {
-                for (let i = 0; i < 8; i++) {
-                    neurons.push({x: 300 + (layer - 1) * 200, y: 75 + i * 50, layer: layer, value: 0});
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = this.selected ? '#00FF00' : '#000000';
+                ctx.lineWidth = this.selected ? 3 : 2;
+                ctx.stroke();
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+
+                // Draw number
+                if (this.number) {
+                    ctx.fillStyle = getContrastColor(this.color);
+                    ctx.font = 'bold 14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(this.number, this.x, this.y);
+                }
+
+                // Draw position
+                if (this.position) {
+                    // Draw position above player with background
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    const padding = 4;
+                    const metrics = ctx.measureText(this.position);
+                    ctx.fillRect(
+                        this.x - metrics.width/2 - padding,
+                        this.y - this.radius - 20 - padding,
+                        metrics.width + padding * 2,
+                        20
+                    );
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(this.position, this.x, this.y - this.radius - 5);
                 }
             }
-            // Output layer
-            for (let i = 0; i < 4; i++) {
-                neurons.push({x: 700, y: 150 + i * 75, layer: 3, value: 0});
+
+            isInside(x, y) {
+                return Math.sqrt((x - this.x) ** 2 + (y - this.y) ** 2) <= this.radius;
             }
         }
 
-        function setupConnections() {
-            for (let i = 0; i < neurons.length; i++) {
-                for (let j = 0; j < neurons.length; j++) {
-                    if (neurons[i].layer < neurons[j].layer) {
-                        connections.push({from: i, to: j, weight: random(-1, 1)});
+        class Ball {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 10;
+                this.type = 'ball';
+                this.selected = false;
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.strokeStyle = this.selected ? '#00FF00' : 'black';
+                ctx.lineWidth = this.selected ? 3 : 1;
+                ctx.stroke();
+
+                // Add soccer ball pattern
+                for(let i = 0; i < 6; i++) {
+                    const angle = (i * 60) * Math.PI / 180;
+                    ctx.beginPath();
+                    const centerX = this.x + (this.radius * 0.5) * Math.cos(angle);
+                    const centerY = this.y + (this.radius * 0.5) * Math.sin(angle);
+                    
+                    for(let j = 0; j < 6; j++) {
+                        const hexAngle = (j * 60) * Math.PI / 180;
+                        const px = centerX + (this.radius * 0.3) * Math.cos(hexAngle);
+                        const py = centerY + (this.radius * 0.3) * Math.sin(hexAngle);
+                        if(j === 0) {
+                            ctx.moveTo(px, py);
+                        } else {
+                            ctx.lineTo(px, py);
+                        }
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+
+                // Add central pentagon
+                ctx.beginPath();
+                for(let i = 0; i < 5; i++) {
+                    const angle = (i * 72 - 18) * Math.PI / 180;
+                    const px = this.x + (this.radius * 0.4) * Math.cos(angle);
+                    const py = this.y + (this.radius * 0.4) * Math.sin(angle);
+                    if(i === 0) {
+                        ctx.moveTo(px, py);
+                    } else {
+                        ctx.lineTo(px, py);
                     }
                 }
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            isInside(x, y) {
+                return Math.sqrt((x - this.x) ** 2 + (y - this.y) ** 2) <= this.radius;
             }
         }
 
-        function drawNeurons() {
-            for (let neuron of neurons) {
-                fill(255);
-                stroke(0);
-                ellipse(neuron.x, neuron.y, 30, 30);
+        class Cone {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = 12;
+                this.type = 'cone';
+                this.selected = false;
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - this.size);
+                ctx.lineTo(this.x - this.size, this.y + this.size);
+                ctx.lineTo(this.x + this.size, this.y + this.size);
+                ctx.closePath();
                 
-                fill(0);
-                textAlign(CENTER, CENTER);
-                textSize(10);
-                text(neuron.value.toFixed(2), neuron.x, neuron.y);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                ctx.strokeStyle = this.selected ? '#00FF00' : 'black';
+                ctx.lineWidth = this.selected ? 3 : 1;
+                ctx.stroke();
+            }
+
+            isInside(x, y) {
+                return x >= this.x - this.size && x <= this.x + this.size &&
+                       y >= this.y - this.size && y <= this.y + this.size;
             }
         }
 
-        function drawConnections() {
-            for (let conn of connections) {
-                let from = neurons[conn.from];
-                let to = neurons[conn.to];
-                stroke(200);
-                line(from.x, from.y, to.x, to.y);
+        class Line {
+            constructor(x1, y1, x2, y2, color = '#000000') {
+                this.x1 = x1;
+                this.y1 = y1;
+                this.x2 = x2;
+                this.y2 = y2;
+                this.color = color;
+                this.type = 'line';
+                this.selected = false;
+                this.dx1 = 0;
+                this.dy1 = 0;
+                this.dx2 = 0;
+                this.dy2 = 0;
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.moveTo(this.x1, this.y1);
+                ctx.lineTo(this.x2, this.y2);
+                
+                ctx.strokeStyle = this.selected ? '#00FF00' : this.color;
+                ctx.lineWidth = this.selected ? 3 : 2;
+                ctx.stroke();
+            }
+
+            isInside(x, y) {
+                const threshold = 10;
+                
+                // Calculate distance from point to line segment
+                const A = this.y2 - this.y1;
+                const B = this.x1 - this.x2;
+                const C = this.x2 * this.y1 - this.x1 * this.y2;
+                const distance = Math.abs(A * x + B * y + C) / Math.sqrt(A * A + B * B);
+                
+                // Check if point is within the line segment bounds
+                const minX = Math.min(this.x1, this.x2) - threshold;
+                const maxX = Math.max(this.x1, this.x2) + threshold;
+                const minY = Math.min(this.y1, this.y2) - threshold;
+                const maxY = Math.max(this.y1, this.y2) + threshold;
+                
+                return distance <= threshold && 
+                       x >= minX && x <= maxX && 
+                       y >= minY && y <= maxY;
             }
         }
 
-        function drawLayerLabels() {
-            fill(0);
-            textAlign(CENTER, BOTTOM);
-            textSize(14);
-            text("Input Layer", 100, 50);
-            text("Hidden Layer 1", 300, 50);
-            text("Hidden Layer 2", 500, 50);
-            text("Output Layer", 700, 50);
+        class Arrow extends Line {
+            constructor(x1, y1, x2, y2, color = '#000000') {
+                super(x1, y1, x2, y2, color);
+                this.type = 'arrow';
+            }
+
+            draw(ctx) {
+                // Draw the main line
+                super.draw(ctx);
+                
+                // Add arrow head
+                const angle = Math.atan2(this.y2 - this.y1, this.x2 - this.x1);
+                const length = 15;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.x2, this.y2);
+                ctx.lineTo(
+                    this.x2 - length * Math.cos(angle - Math.PI/6),
+                    this.y2 - length * Math.sin(angle - Math.PI/6)
+                );
+                ctx.moveTo(this.x2, this.y2);
+                ctx.lineTo(
+                    this.x2 - length * Math.cos(angle + Math.PI/6),
+                    this.y2 - length * Math.sin(angle + Math.PI/6)
+                );
+                
+                ctx.strokeStyle = this.selected ? '#00FF00' : this.color;
+                ctx.lineWidth = this.selected ? 3 : 2;
+                ctx.stroke();
+            }
         }
 
-        function updateAnimation() {
-            // Update neuron values
-            for (let i = 0; i < neurons.length; i++) {
-                if (neurons[i].layer === 0) continue; // Skip input layer
-                let sum = 0;
-                for (let conn of connections) {
-                    if (conn.to === i) {
-                        sum += neurons[conn.from].value * conn.weight;
+        class DribbleArrow extends Arrow {
+            constructor(x1, y1, x2, y2, color = '#000000') {
+                super(x1, y1, x2, y2, color);
+                this.type = 'dribbleArrow';
+            }
+
+            draw(ctx) {
+                // Save context to restore dash settings after
+                ctx.save();
+                
+                // Set dashed line style
+                ctx.setLineDash([5, 3]);
+                
+                // Draw the dashed line
+                ctx.beginPath();
+                ctx.moveTo(this.x1, this.y1);
+                ctx.lineTo(this.x2, this.y2);
+                
+                ctx.strokeStyle = this.selected ? '#00FF00' : this.color;
+                ctx.lineWidth = this.selected ? 3 : 2;
+                ctx.stroke();
+                
+                // Reset dash settings for arrow head
+                ctx.setLineDash([]);
+                
+                // Add arrow head
+                const angle = Math.atan2(this.y2 - this.y1, this.x2 - this.x1);
+                const length = 15;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.x2, this.y2);
+                ctx.lineTo(
+                    this.x2 - length * Math.cos(angle - Math.PI/6),
+                    this.y2 - length * Math.sin(angle - Math.PI/6)
+                );
+                ctx.moveTo(this.x2, this.y2);
+                ctx.lineTo(
+                    this.x2 - length * Math.cos(angle + Math.PI/6),
+                    this.y2 - length * Math.sin(angle + Math.PI/6)
+                );
+                ctx.stroke();
+                
+                // Restore context
+                ctx.restore();
+            }
+        }
+
+        class PassArrow extends Line {
+            constructor(x1, y1, x2, y2, color = '#000000') {
+                super(x1, y1, x2, y2, color);
+                this.type = 'passArrow';
+            }
+
+            draw(ctx) {
+                // Calculate control point for curve
+                const midX = (this.x1 + this.x2) / 2;
+                const midY = (this.y1 + this.y2) / 2 - 30;
+                
+                // Draw curved line
+                ctx.beginPath();
+                ctx.moveTo(this.x1, this.y1);
+                ctx.quadraticCurveTo(midX, midY, this.x2, this.y2);
+                ctx.strokeStyle = this.selected ? '#00FF00' : this.color;
+                ctx.lineWidth = this.selected ? 3 : 2;
+                ctx.stroke();
+                
+                // Add arrow head
+                // Need to calculate the angle at the end of the curve
+                const t = 0.95; // A point very close to the end
+                const xT = (1-t)*(1-t)*this.x1 + 2*(1-t)*t*midX + t*t*this.x2;
+                const yT = (1-t)*(1-t)*this.y1 + 2*(1-t)*t*midY + t*t*this.y2;
+                const angle = Math.atan2(this.y2 - yT, this.x2 - xT);
+                const length = 15;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.x2, this.y2);
+                ctx.lineTo(
+                    this.x2 - length * Math.cos(angle - Math.PI/6),
+                    this.y2 - length * Math.sin(angle - Math.PI/6)
+                );
+                ctx.moveTo(this.x2, this.y2);
+                ctx.lineTo(
+                    this.x2 - length * Math.cos(angle + Math.PI/6),
+                    this.y2 - length * Math.sin(angle + Math.PI/6)
+                );
+                ctx.stroke();
+            }
+
+            isInside(x, y) {
+                // This is simplified - calculating exact distance to a curve is more complex
+                const midX = (this.x1 + this.x2) / 2;
+                const midY = (this.y1 + this.y2) / 2 - 30;
+                
+                // Check distance to three points on the curve
+                const d1 = Math.sqrt((x - this.x1) ** 2 + (y - this.y1) ** 2);
+                const d2 = Math.sqrt((x - midX) ** 2 + (y - midY) ** 2);
+                const d3 = Math.sqrt((x - this.x2) ** 2 + (y - this.y2) ** 2);
+                
+                return Math.min(d1, d2, d3) < 15;
+            }
+        }
+
+        class Goal {
+            constructor(x, y, width = 24, height = 8, rotation = 0) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.rotation = rotation; // in radians
+                this.type = 'goal';
+                this.selected = false;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                
+                // Translate to the center of the goal
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                
+                // Draw goal posts
+                ctx.strokeStyle = this.selected ? '#00FF00' : '#888';
+                ctx.lineWidth = this.selected ? 3 : 2;
+                
+                // Main goal frame
+                ctx.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
+                
+                // Net lines
+                ctx.strokeStyle = this.selected ? '#00FF00' : '#ccc';
+                ctx.lineWidth = 1;
+                
+                // Vertical net lines
+                const netSpacing = 4;
+                for (let x = -this.width / 2 + netSpacing; x < this.width / 2; x += netSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, -this.height / 2);
+                    ctx.lineTo(x, this.height / 2);
+                    ctx.stroke();
+                }
+                
+                // Horizontal net lines
+                for (let y = -this.height / 2 + netSpacing; y < this.height / 2; y += netSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(-this.width / 2, y);
+                    ctx.lineTo(this.width / 2, y);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            }
+
+            isInside(x, y) {
+                // Transform the point based on goal rotation
+                const dx = x - this.x;
+                const dy = y - this.y;
+                const rotatedX = dx * Math.cos(-this.rotation) - dy * Math.sin(-this.rotation);
+                const rotatedY = dx * Math.sin(-this.rotation) + dy * Math.cos(-this.rotation);
+                
+                return rotatedX >= -this.width / 2 && rotatedX <= this.width / 2 &&
+                       rotatedY >= -this.height / 2 && rotatedY <= this.height / 2;
+            }
+        }
+
+        class Area {
+            constructor(x1, y1, x2, y2, color = 'rgba(0,0,0,0.2)') {
+                this.x1 = Math.min(x1, x2);
+                this.y1 = Math.min(y1, y2);
+                this.x2 = Math.max(x1, x2);
+                this.y2 = Math.max(y1, y2);
+                this.color = color;
+                this.type = 'area';
+                this.selected = false;
+                this.dx1 = 0;
+                this.dy1 = 0;
+                this.dx2 = 0;
+                this.dy2 = 0;
+            }
+
+            draw(ctx) {
+                const width = this.x2 - this.x1;
+                const height = this.y2 - this.y1;
+                
+                // Draw filled rectangle
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x1, this.y1, width, height);
+                
+                // Draw border
+                ctx.strokeStyle = this.selected ? '#00FF00' : '#000';
+                ctx.lineWidth = this.selected ? 3 : 1;
+                ctx.strokeRect(this.x1, this.y1, width, height);
+            }
+
+            isInside(x, y) {
+                // Check if point is inside the area
+                return x >= this.x1 && x <= this.x2 && y >= this.y1 && y <= this.y2;
+            }
+        }
+
+        class TextLabel {
+            constructor(x, y, text, fontSize = 16, color = '#000000') {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.fontSize = fontSize;
+                this.color = color;
+                this.type = 'text';
+                this.selected = false;
+            }
+
+            draw(ctx) {
+                ctx.font = `${this.fontSize}px Arial`;
+                ctx.fillStyle = this.color;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.text, this.x, this.y);
+                
+                if (this.selected) {
+                    const metrics = ctx.measureText(this.text);
+                    const width = metrics.width;
+                    const height = this.fontSize;
+                    
+                    ctx.strokeStyle = '#00FF00';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(
+                        this.x - width / 2 - 5,
+                        this.y - height / 2 - 5,
+                        width + 10,
+                        height + 10
+                    );
+                }
+            }
+
+            isInside(x, y) {
+                // Approximate text boundaries
+                const ctx = document.getElementById('field').getContext('2d');
+                ctx.font = `${this.fontSize}px Arial`;
+                const metrics = ctx.measureText(this.text);
+                const width = metrics.width;
+                const height = this.fontSize;
+                
+                return x >= this.x - width / 2 && x <= this.x + width / 2 &&
+                       y >= this.y - height / 2 && y <= this.y + height / 2;
+            }
+        }
+
+        // Utility Functions
+        function getContrastColor(hexColor) {
+            // Convert hex to RGB
+            let r, g, b;
+            if (hexColor.startsWith('#')) {
+                const hex = hexColor.substring(1);
+                r = parseInt(hex.substr(0, 2), 16);
+                g = parseInt(hex.substr(2, 2), 16);
+                b = parseInt(hex.substr(4, 2), 16);
+            } else if (hexColor.startsWith('rgba')) {
+                const rgba = hexColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+                if (rgba) {
+                    r = parseInt(rgba[1]);
+                    g = parseInt(rgba[2]);
+                    b = parseInt(rgba[3]);
+                }
+            } else if (hexColor.startsWith('rgb')) {
+                const rgb = hexColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                if (rgb) {
+                    r = parseInt(rgb[1]);
+                    g = parseInt(rgb[2]);
+                    b = parseInt(rgb[3]);
+                }
+            }
+            
+            // Calculate luminance
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            
+            // Return black or white based on luminance
+            return luminance > 0.5 ? '#000000' : '#ffffff';
+        }
+
+        function showStatusMessage(message, duration = 3000) {
+            const statusEl = document.getElementById('status-message');
+            statusEl.textContent = message;
+            statusEl.classList.add('show');
+            
+            setTimeout(() => {
+                statusEl.classList.remove('show');
+            }, duration);
+        }
+
+        // Main App Class
+        class SoccerCoachApp {
+
+			getCanvasCoordinates(clientX, clientY) {
+				const rect = this.canvas.getBoundingClientRect();
+				const dpr = window.devicePixelRatio || 1;
+				
+				// Get raw position in canvas pixels
+				const rawX = clientX - rect.left;
+				const rawY = clientY - rect.top;
+				
+				// Convert to logical coordinates
+				const canvasX = rawX * (this.canvas.width / rect.width);
+				const canvasY = rawY * (this.canvas.height / rect.height);
+				
+				// Apply view transformations
+				return {
+					x: canvasX / dpr / this.scale - this.offsetX,
+					y: canvasY / dpr / this.scale - this.offsetY
+				};
+			}
+			
+			// Preselect color
+			preSelectColor(buttonId) {
+				// Open color picker dialog for a specific tool
+				this.colorForTool = buttonId; // Store which tool we're selecting color for
+				
+				// Get current color
+				const indicator = document.querySelector(`#${buttonId} .color-indicator`);
+				let currentColor = indicator ? indicator.style.backgroundColor : '';
+				
+				if (!currentColor) {
+					// Get default color if available
+					const toolType = buttonId.replace('draw', '').toLowerCase();
+					currentColor = DEFAULT_COLORS[toolType] || '#000000';
+				}
+				
+				// Update color picker
+				this.selectedColor = currentColor;
+				document.querySelectorAll('.color-option').forEach(option => {
+					option.classList.remove('selected');
+					if (option.dataset.color === this.selectedColor) {
+						option.classList.add('selected');
+					} else if (!document.querySelector('.color-option.selected') && option.dataset.color === '#000000') {
+						// Fallback to black if no match found
+						option.classList.add('selected');
+						this.selectedColor = '#000000';
+					}
+				});
+				
+				// Update dialog title to indicate pre-selection
+				const dialogTitle = document.querySelector('#color-dialog .dialog-title');
+				if (dialogTitle) {
+					dialogTitle.textContent = `Choose Color for ${buttonId.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}`;
+				}
+				
+				// Open dialog
+				document.getElementById('color-dialog').classList.add('open');
+			}
+
+			// And update the applySelectedColor method
+			applySelectedColor() {
+				if (!this.selectedColor) {
+					return;
+				}
+				
+				if (this.selectedShape) {
+					// If we have a selected shape, update its color
+					this.selectedShape.color = this.selectedColor;
+				}
+				
+				if (this.colorForTool) {
+					// Update the tool's indicator color
+					const indicator = document.querySelector(`#${this.colorForTool} .color-indicator`);
+					if (indicator) {
+						indicator.style.backgroundColor = this.selectedColor;
+					}
+					
+					// Update default colors when appropriate
+					if (this.colorForTool === 'homePlayer') {
+						DEFAULT_COLORS.homePlayer = this.selectedColor;
+					} else if (this.colorForTool === 'awayPlayer') {
+						DEFAULT_COLORS.awayPlayer = this.selectedColor;
+					} else if (this.colorForTool === 'neutralPlayer') {
+						DEFAULT_COLORS.neutralPlayer = this.selectedColor;
+					} else if (this.colorForTool === 'drawLine') {
+						DEFAULT_COLORS.line = this.selectedColor;
+					} else if (this.colorForTool === 'drawArrow') {
+						DEFAULT_COLORS.arrow = this.selectedColor;
+					} else if (this.colorForTool === 'dribbleArrow') {
+						DEFAULT_COLORS.dribbleArrow = this.selectedColor;
+					} else if (this.colorForTool === 'passArrow') {
+						DEFAULT_COLORS.passArrow = this.selectedColor;
+					} else if (this.colorForTool === 'cone') {
+						DEFAULT_COLORS.cone = this.selectedColor;
+					} else if (this.colorForTool === 'area') {
+						DEFAULT_COLORS.area = this.selectedColor;
+					}
+				}
+				
+				// Reset dialog title
+				const dialogTitle = document.querySelector('#color-dialog .dialog-title');
+				if (dialogTitle) {
+					dialogTitle.textContent = 'Choose Color';
+				}
+				
+				// Reset and close dialog
+				this.colorForTool = null;
+				document.getElementById('color-dialog').classList.remove('open');
+				
+				showStatusMessage('Color changed');
+				this.redraw();
+			}
+			
+			
+			findShapeAt(x, y) {
+				// Check from top (newest) to bottom
+				for (let i = this.shapes.length - 1; i >= 0; i--) {
+					const shape = this.shapes[i];
+					if (shape.isInside && shape.isInside(x, y)) {
+						this.shapes.forEach(s => s.selected = false); // Deselect all
+						shape.selected = true; // Select this one
+						return shape;
+					}
+				}
+				return null; // Nothing found
+			}
+			
+			constructor() {
+				this.canvas = document.getElementById('field');
+				this.currentTool = 'selectMode';
+				this.shapes = [];
+				this.isDragging = false;
+				this.isDrawing = false;
+				this.startX = 0;
+				this.startY = 0;
+				this.selectedShape = null;
+				this.dragOffsetX = 0;
+				this.dragOffsetY = 0;
+				this.scale = 1;
+				this.offsetX = 0;
+				this.offsetY = 0;
+				this.fieldType = 'fullField';
+				this.currentTab = 'whiteboard';
+				this.savedItems = this.loadFromLocalStorage() || {
+					formations: [],
+					plays: [],
+					drills: [],
+					other: []
+				};
+				this.animationFrames = [];
+				this.isAnimating = false;
+				this.animationFrame = 0;
+				this.animationSpeed = 1;
+				this.animationInterval = null;
+				this.selectedColor = null;
+				
+				// Initialize the app
+				this.init();
+			}
+
+			init() {
+				// Set canvas size and initialize field
+				this.resizeCanvas();
+				window.addEventListener('resize', () => this.resizeCanvas());
+				
+				// Setup event listeners
+				this.setupEventListeners();
+				
+				// Draw the field immediately
+				this.drawField();
+				
+				// Force an immediate redraw to prevent white screen
+				setTimeout(() => {
+					this.redraw();
+					console.log('Initial redraw completed');
+				}, 50);
+				
+				// Load preset data
+				this.loadPresets();
+				
+				// Set the initial sidebar content
+				this.updateSidebar();
+			}
+
+			resizeCanvas() {
+				try {
+					const container = this.canvas.parentElement;
+					const dpr = window.devicePixelRatio || 1;
+					
+					// Log initial dimensions for debugging
+					console.log('Container size:', container.clientWidth, 'x', container.clientHeight);
+					
+					// Get container dimensions
+					let displayWidth = container.clientWidth;
+					let displayHeight = container.clientHeight;
+					
+					// Ensure minimum dimensions
+					if (displayWidth < 100) displayWidth = 100;
+					if (displayHeight < 100) displayHeight = 100;
+					
+					// Set CSS size
+					this.canvas.style.width = `${displayWidth}px`;
+					this.canvas.style.height = `${displayHeight}px`;
+					
+					// Set actual buffer size
+					this.canvas.width = Math.floor(displayWidth * dpr);
+					this.canvas.height = Math.floor(displayHeight * dpr);
+					
+					// Get fresh context and apply initial transform
+					this.ctx = this.canvas.getContext('2d');
+					this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+					
+					console.log(`Canvas resized to ${this.canvas.width}x${this.canvas.height} (DPR: ${dpr})`);
+					
+					// Redraw everything
+					this.drawField();
+				} catch (e) {
+					console.error('Error resizing canvas:', e);
+				}
+			}
+
+            setupEventListeners() {
+				// Safari and mobile browsers
+				this.canvas.addEventListener('touchstart', (e) => {
+					if (e.touches.length === 1) {
+						const touch = e.touches[0];
+						const mouseEvent = new MouseEvent('mousedown', {
+							clientX: touch.clientX,
+							clientY: touch.clientY
+						});
+						this.canvas.dispatchEvent(mouseEvent);
+					}
+					e.preventDefault();
+				}, { passive: false });
+
+				this.canvas.addEventListener('touchmove', (e) => {
+					if (e.touches.length === 1) {
+						const touch = e.touches[0];
+						const mouseEvent = new MouseEvent('mousemove', {
+							clientX: touch.clientX,
+							clientY: touch.clientY
+						});
+						this.canvas.dispatchEvent(mouseEvent);
+					}
+					e.preventDefault();
+				}, { passive: false });
+
+				this.canvas.addEventListener('touchend', (e) => {
+					const mouseEvent = new MouseEvent('mouseup', {});
+					this.canvas.dispatchEvent(mouseEvent);
+					e.preventDefault();
+				}, { passive: false });
+				
+				// right-click handlers
+				document.querySelectorAll('.toolbar button .color-indicator').forEach(indicator => {
+					indicator.addEventListener('click', (e) => {
+						e.stopPropagation(); // Prevent the parent button from being clicked
+						const buttonId = e.target.parentElement.id;
+						this.preSelectColor(buttonId);
+					});
+				});
+				
+				// Tool selection
+                document.querySelectorAll('.toolbar button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        if (button.id === 'clear') {
+                            this.clearField();
+                            return;
+                        }
+                        
+                        if (button.id === 'addNumber' || button.id === 'addPosition') {
+                            this.handlePlayerLabels(button.id);
+                            return;
+                        }
+                        
+                        if (button.id === 'changeColor') {
+                            this.openColorDialog();
+                            return;
+                        }
+                        
+                        if (button.id === 'text') {
+                            this.openTextDialog();
+                            return;
+                        }
+                        
+                        // Set the current tool
+                        this.currentTool = button.id;
+                        document.querySelectorAll('.toolbar button').forEach(b => {
+                            b.classList.remove('active');
+                        });
+                        button.classList.add('active');
+                        
+                        showStatusMessage(`Tool selected: ${button.textContent.trim()}`);
+                    });
+                });
+
+                // Canvas mouse events
+                this.canvas.addEventListener('mousedown', e => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', e => this.handleMouseMove(e));
+                this.canvas.addEventListener('mouseup', e => this.handleMouseUp(e));
+                this.canvas.addEventListener('touchstart', e => this.handleTouchStart(e), { passive: false });
+                this.canvas.addEventListener('touchmove', e => this.handleTouchMove(e), { passive: false });
+                this.canvas.addEventListener('touchend', e => this.handleTouchEnd(e));
+
+                // Field type selection
+				document.getElementById('fieldType').addEventListener('change', e => {
+					this.fieldType = e.target.value;
+					
+					// Reset view when changing field type
+					this.scale = 1;
+					this.offsetX = 0; 
+					this.offsetY = 0;
+					
+					this.redraw();
+					showStatusMessage(`Field changed to: ${e.target.options[e.target.selectedIndex].text}`);
+				});
+
+                // Zoom controls
+                document.getElementById('zoomIn').addEventListener('click', () => this.zoom(1.2));
+                document.getElementById('zoomOut').addEventListener('click', () => this.zoom(0.8));
+                document.getElementById('resetView').addEventListener('click', () => this.resetView());
+
+                // Tab selection
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        this.currentTab = tab.dataset.tab;
+                        this.updateSidebar();
+                        
+                        showStatusMessage(`Tab changed to: ${tab.textContent}`);
+                    });
+                });
+
+                // Save/Load buttons
+                document.getElementById('save-btn').addEventListener('click', () => this.openSaveDialog());
+                document.getElementById('load-btn').addEventListener('click', () => this.openLoadDialog());
+
+                // Dialog close buttons
+                document.querySelectorAll('.dialog-close').forEach(button => {
+                    button.addEventListener('click', () => {
+                        document.querySelectorAll('.dialog-overlay').forEach(dialog => {
+                            dialog.classList.remove('open');
+                        });
+                    });
+                });
+
+                // Save dialog confirm
+                document.getElementById('save-confirm').addEventListener('click', () => this.saveCurrentDiagram());
+                
+                // Text dialog confirm
+                document.getElementById('text-confirm').addEventListener('click', () => this.addTextLabel());
+                
+                // Color dialog confirm
+                document.getElementById('color-confirm').addEventListener('click', () => this.applySelectedColor());
+                
+                // Color options in color dialog
+                document.querySelectorAll('.color-option').forEach(option => {
+                    option.addEventListener('click', () => {
+                        document.querySelectorAll('.color-option').forEach(o => {
+                            o.classList.remove('selected');
+                        });
+                        option.classList.add('selected');
+                        this.selectedColor = option.dataset.color;
+                    });
+                });
+
+                // Animation controls
+                document.getElementById('playAnimation').addEventListener('click', () => this.startAnimation());
+                document.getElementById('pauseAnimation').addEventListener('click', () => this.pauseAnimation());
+                document.getElementById('resetAnimation').addEventListener('click', () => this.resetAnimation());
+                document.getElementById('animationSpeed').addEventListener('input', e => {
+                    this.animationSpeed = parseFloat(e.target.value);
+                });
+
+                // Help panel
+                document.getElementById('help-toggle').addEventListener('click', () => {
+                    const helpPanel = document.getElementById('help-panel');
+                    helpPanel.classList.toggle('open');
+                });
+				
+				// Add this at the end of the setupEventListeners method
+				setTimeout(() => {
+					document.querySelectorAll('.toolbar button .color-indicator').forEach(indicator => {
+						indicator.addEventListener('click', (e) => {
+							e.stopPropagation(); // Prevent the parent button from being clicked
+							const buttonId = e.target.parentElement.id;
+							this.preSelectColor(buttonId);
+						});
+						// Add a hover effect for better usability
+						indicator.style.cursor = 'pointer';
+						indicator.setAttribute('title', 'Click to change color');
+					});
+				}, 300); // Wait for DOM to be fully loaded
+				
+            }
+
+			handleMouseMove(e) {
+				const coords = this.getCanvasCoordinates(e.clientX, e.clientY);
+				this.moveInteraction(coords.x, coords.y);
+			}
+
+			handleMouseUp(e) {
+				const coords = this.getCanvasCoordinates(e.clientX, e.clientY);
+				this.endInteraction(coords.x, coords.y);
+			}
+
+			handleMouseDown(e) {
+				const coords = this.getCanvasCoordinates(e.clientX, e.clientY);
+				this.startInteraction(coords.x, coords.y);
+				console.log('Mouse down at:', coords.x, coords.y, 'Tool:', this.currentTool);
+			}
+			
+			handleTouchStart(e) {
+				e.preventDefault();
+				if (e.touches.length === 1) {
+					const touch = e.touches[0];
+					const coords = this.getCanvasCoordinates(touch.clientX, touch.clientY);
+					this.startInteraction(coords.x, coords.y);
+				}
+			}
+
+			handleTouchMove(e) {
+				e.preventDefault();
+				if (e.touches.length === 1) {
+					const touch = e.touches[0];
+					const coords = this.getCanvasCoordinates(touch.clientX, touch.clientY);
+					this.moveInteraction(coords.x, coords.y);
+				}
+			}
+
+			handleTouchEnd(e) {
+				e.preventDefault();
+				if (e.changedTouches.length > 0) {
+					const touch = e.changedTouches[0];
+					const coords = this.getCanvasCoordinates(touch.clientX, touch.clientY);
+					this.endInteraction(coords.x, coords.y);
+				} else {
+					this.endInteraction();
+				}
+			}
+
+            startInteraction(x, y) {
+                if (this.currentTool === 'selectMode') {
+                    // Deselect all shapes first
+                    this.shapes.forEach(shape => shape.selected = false);
+                    this.selectedShape = null;
+                    
+                    // Check shapes from top to bottom (last added first)
+                    for (let i = this.shapes.length - 1; i >= 0; i--) {
+                        const shape = this.shapes[i];
+                        if (shape.isInside && shape.isInside(x, y)) {
+                            this.selectedShape = shape;
+                            shape.selected = true;
+                            
+                            if (shape.type === 'line' || shape.type === 'arrow' || 
+                                shape.type === 'dribbleArrow' || shape.type === 'passArrow' ||
+                                shape.type === 'area') {
+                                // Set offsets for line/area movement
+                                if (shape.type === 'area') {
+                                    this.selectedShape.dx1 = this.selectedShape.x1 - x;
+                                    this.selectedShape.dy1 = this.selectedShape.y1 - y;
+                                    this.selectedShape.dx2 = this.selectedShape.x2 - x;
+                                    this.selectedShape.dy2 = this.selectedShape.y2 - y;
+                                } else {
+                                    this.selectedShape.dx1 = this.selectedShape.x1 - x;
+                                    this.selectedShape.dy1 = this.selectedShape.y1 - y;
+                                    this.selectedShape.dx2 = this.selectedShape.x2 - x;
+                                    this.selectedShape.dy2 = this.selectedShape.y2 - y;
+                                }
+                            } else {
+                                this.dragOffsetX = x - shape.x;
+                                this.dragOffsetY = y - shape.y;
+                            }
+                            this.isDragging = true;
+                            
+                            // Show a status message about the selected object
+                            showStatusMessage(`Selected: ${shape.type[0].toUpperCase() + shape.type.slice(1)}`);
+                            break;
+                        }
+                    }
+                } else if (this.currentTool === 'remove') {
+                    for (let i = this.shapes.length - 1; i >= 0; i--) {
+                        const shape = this.shapes[i];
+                        if (shape.isInside && shape.isInside(x, y)) {
+                            this.shapes.splice(i, 1);
+                            showStatusMessage(`Removed: ${shape.type[0].toUpperCase() + shape.type.slice(1)}`);
+                            break;
+                        }
+                    }
+                } else if (this.currentTool === 'drawLine' || this.currentTool === 'drawArrow' || 
+                           this.currentTool === 'dribbleArrow' || this.currentTool === 'passArrow' ||
+                           this.currentTool === 'area') {
+                    this.isDrawing = true;
+                    this.startX = x;
+                    this.startY = y;
+                } else {
+                    // Handle creation of new shapes
+                    this.createShape(x, y);
+                }
+                
+                this.redraw();
+            }
+
+            moveInteraction(x, y) {
+                if (this.isDragging && this.selectedShape) {
+                    if (this.selectedShape.type === 'line' || this.selectedShape.type === 'arrow' || 
+                        this.selectedShape.type === 'dribbleArrow' || this.selectedShape.type === 'passArrow') {
+                        // Move both endpoints of the line
+                        this.selectedShape.x1 = x + this.selectedShape.dx1;
+                        this.selectedShape.y1 = y + this.selectedShape.dy1;
+                        this.selectedShape.x2 = x + this.selectedShape.dx2;
+                        this.selectedShape.y2 = y + this.selectedShape.dy2;
+                    } else if (this.selectedShape.type === 'area') {
+                        // Move the area
+                        this.selectedShape.x1 = x + this.selectedShape.dx1;
+                        this.selectedShape.y1 = y + this.selectedShape.dy1;
+                        this.selectedShape.x2 = x + this.selectedShape.dx2;
+                        this.selectedShape.y2 = y + this.selectedShape.dy2;
+                    } else {
+                        this.selectedShape.x = x - this.dragOffsetX;
+                        this.selectedShape.y = y - this.dragOffsetY;
+                    }
+                    this.redraw();
+                } else if (this.isDrawing) {
+                    this.redraw();
+                    
+                    // Draw preview of the shape
+                    this.ctx.save();
+                    this.ctx.scale(this.scale, this.scale);
+                    this.ctx.translate(this.offsetX, this.offsetY);
+                    
+                    if (this.currentTool === 'area') {
+                        // Draw preview rectangle
+                        const width = x - this.startX;
+                        const height = y - this.startY;
+                        
+                        this.ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                        this.ctx.fillRect(this.startX, this.startY, width, height);
+                        
+                        this.ctx.strokeStyle = 'black';
+                        this.ctx.lineWidth = 1;
+                        this.ctx.strokeRect(this.startX, this.startY, width, height);
+                    } else {
+                        // Draw preview line/arrow
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(this.startX, this.startY);
+                        
+                        if (this.currentTool === 'passArrow') {
+                            // Draw curved line for pass
+                            const midX = (this.startX + x) / 2;
+                            const midY = (this.startY + y) / 2 - 30;
+                            
+                            this.ctx.quadraticCurveTo(midX, midY, x, y);
+                        } else {
+                            this.ctx.lineTo(x, y);
+                        }
+                        
+                        this.ctx.strokeStyle = 'black';
+                        this.ctx.lineWidth = 2;
+                        
+                        if (this.currentTool === 'dribbleArrow') {
+                            this.ctx.setLineDash([5, 3]);
+                        }
+                        
+                        this.ctx.stroke();
+                        this.ctx.setLineDash([]);
+                        
+                        if (this.currentTool === 'drawArrow' || this.currentTool === 'dribbleArrow' || this.currentTool === 'passArrow') {
+                            let angle;
+                            
+                            if (this.currentTool === 'passArrow') {
+                                // Calculate angle at the end of the curve
+                                const t = 0.95;
+                                const midX = (this.startX + x) / 2;
+                                const midY = (this.startY + y) / 2 - 30;
+                                const xT = (1-t)*(1-t)*this.startX + 2*(1-t)*t*midX + t*t*x;
+                                const yT = (1-t)*(1-t)*this.startY + 2*(1-t)*t*midY + t*t*y;
+                                angle = Math.atan2(y - yT, x - xT);
+                            } else {
+                                angle = Math.atan2(y - this.startY, x - this.startX);
+                            }
+                            
+                            const length = 15;
+                            
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(x, y);
+                            this.ctx.lineTo(
+                                x - length * Math.cos(angle - Math.PI/6),
+                                y - length * Math.sin(angle - Math.PI/6)
+                            );
+                            this.ctx.moveTo(x, y);
+                            this.ctx.lineTo(
+                                x - length * Math.cos(angle + Math.PI/6),
+                                y - length * Math.sin(angle + Math.PI/6)
+                            );
+                            this.ctx.stroke();
+                        }
+                    }
+                    
+                    this.ctx.restore();
+                }
+            }
+
+			endInteraction(x, y) {
+				if (this.isDrawing && x !== undefined && y !== undefined) {
+					if (this.currentTool === 'area') {
+						// Get color from tool indicator
+						const colorIndicator = document.querySelector('#area .color-indicator');
+						const areaColor = colorIndicator ? colorIndicator.style.backgroundColor : DEFAULT_COLORS.area;
+						
+						// Create area object
+						const area = new Area(this.startX, this.startY, x, y, areaColor);
+						this.shapes.push(area);
+						showStatusMessage('Area added');
+					} else if (['drawLine', 'drawArrow', 'dribbleArrow', 'passArrow'].includes(this.currentTool)) {
+						// Create line or arrow object
+						let newLine;
+						
+						// Get color from tool indicator
+						const colorIndicator = document.querySelector(`#${this.currentTool} .color-indicator`);
+						const toolColor = colorIndicator ? colorIndicator.style.backgroundColor : DEFAULT_COLORS[this.currentTool.replace('draw', '').toLowerCase()];
+						
+						switch (this.currentTool) {
+							case 'drawArrow':
+								newLine = new Arrow(this.startX, this.startY, x, y, toolColor);
+								showStatusMessage('Arrow added');
+								break;
+							case 'dribbleArrow':
+								newLine = new DribbleArrow(this.startX, this.startY, x, y, toolColor);
+								showStatusMessage('Dribble arrow added');
+								break;
+							case 'passArrow':
+								newLine = new PassArrow(this.startX, this.startY, x, y, toolColor);
+								showStatusMessage('Pass arrow added');
+								break;
+							default:
+								newLine = new Line(this.startX, this.startY, x, y, toolColor);
+								showStatusMessage('Line added');
+								break;
+						}
+						
+						if (newLine) this.shapes.push(newLine);
+					}
+				}
+				
+				this.isDragging = false;
+				this.isDrawing = false;
+				this.redraw();
+			}
+
+			createShape(x, y) {
+				let shape;
+				
+				switch (this.currentTool) {
+					case 'homePlayer':
+						// Get color from indicator if available
+						const homeIndicator = document.querySelector('#homePlayer .color-indicator');
+						const homeColor = homeIndicator ? homeIndicator.style.backgroundColor : DEFAULT_COLORS.homePlayer;
+						shape = new Player(x, y, homeColor, '', '');
+						showStatusMessage('Home player added');
+						break;
+					case 'awayPlayer':
+						const awayIndicator = document.querySelector('#awayPlayer .color-indicator');
+						const awayColor = awayIndicator ? awayIndicator.style.backgroundColor : DEFAULT_COLORS.awayPlayer;
+						shape = new Player(x, y, awayColor, '', '');
+						showStatusMessage('Away player added');
+						break;
+					case 'neutralPlayer':
+						const neutralIndicator = document.querySelector('#neutralPlayer .color-indicator');
+						const neutralColor = neutralIndicator ? neutralIndicator.style.backgroundColor : DEFAULT_COLORS.neutralPlayer;
+						shape = new Player(x, y, neutralColor, '', '');
+						showStatusMessage('Coach/neutral player added');
+						break;
+					case 'ball':
+						shape = new Ball(x, y);
+						showStatusMessage('Ball added');
+						break;
+					case 'cone':
+						const coneIndicator = document.querySelector('#cone .color-indicator');
+						const coneColor = coneIndicator ? coneIndicator.style.backgroundColor : DEFAULT_COLORS.cone;
+						shape = new Cone(x, y, coneColor);
+						showStatusMessage('Cone added');
+						break;
+					case 'goal':
+						shape = new Goal(x, y);
+						showStatusMessage('Goal added');
+						break;
+				}
+				
+				if (shape) {
+					this.shapes.push(shape);
+					this.redraw();
+				}
+			}
+
+            handlePlayerLabels(toolId) {
+                if (!this.selectedShape || this.selectedShape.type !== 'player') {
+                    showStatusMessage('Please select a player first', 2000);
+                    return;
+                }
+                
+                if (toolId === 'addNumber') {
+                    const number = prompt('Enter player number:');
+                    if (number) {
+                        this.selectedShape.number = number;
+                        showStatusMessage(`Player number set to: ${number}`);
+                    }
+                } else if (toolId === 'addPosition') {
+                    const position = prompt('Enter player position:');
+                    if (position) {
+                        this.selectedShape.position = position;
+                        showStatusMessage(`Player position set to: ${position}`);
                     }
                 }
-                neurons[i].value = sigmoid(sum);
+                
+                this.redraw();
             }
 
-            // Create new particles
-            for (let conn of connections) {
-                if (random() < 0.1 * animationSpeed.value / 10) {
-                    particles.push({
-                        x: neurons[conn.from].x,
-                        y: neurons[conn.from].y,
-                        targetX: neurons[conn.to].x,
-                        targetY: neurons[conn.to].y,
-                        progress: 0
+            openColorDialog() {
+                if (!this.selectedShape) {
+                    showStatusMessage('Please select an object first', 2000);
+                    return;
+                }
+                
+                // Reset selected color
+                this.selectedColor = this.selectedShape.color;
+                
+                // Update the selected color in the dialog
+                document.querySelectorAll('.color-option').forEach(option => {
+                    option.classList.remove('selected');
+                    if (option.dataset.color === this.selectedColor) {
+                        option.classList.add('selected');
+                    }
+                });
+                
+                // Open the dialog
+                document.getElementById('color-dialog').classList.add('open');
+            }
+
+            openTextDialog() {
+                document.getElementById('text-dialog').classList.add('open');
+                document.getElementById('text-content').value = '';
+                document.getElementById('text-content').focus();
+            }
+
+            addTextLabel() {
+                const text = document.getElementById('text-content').value.trim();
+                const fontSize = parseInt(document.getElementById('text-size').value);
+                const color = document.getElementById('text-color').value;
+                
+                if (!text) {
+                    return;
+                }
+                
+                // Calculate center position
+                const centerX = this.canvas.width / (2 * this.scale) - this.offsetX;
+                const centerY = this.canvas.height / (2 * this.scale) - this.offsetY;
+                
+                const textLabel = new TextLabel(centerX, centerY, text, fontSize, color);
+                this.shapes.push(textLabel);
+                
+                // Close the dialog
+                document.getElementById('text-dialog').classList.remove('open');
+                
+                // Select the text for moving
+                this.shapes.forEach(shape => shape.selected = false);
+                textLabel.selected = true;
+                this.selectedShape = textLabel;
+                this.isDragging = true;
+                this.dragOffsetX = 0;
+                this.dragOffsetY = 0;
+                
+                showStatusMessage('Text added - drag to position');
+                this.redraw();
+            }
+
+			drawField() {
+				if (!this.ctx) {
+					console.log("Canvas context missing, recreating");
+					this.ctx = this.canvas.getContext('2d');
+					if (!this.ctx) {
+						console.error("Failed to get canvas context even after retry");
+						return;
+					}
+				}
+				
+				const dpr = window.devicePixelRatio || 1;
+				
+				// Clear the entire canvas with white background
+				this.ctx.save();
+				this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+				this.ctx.fillStyle = 'white';
+				this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+				this.ctx.restore();
+				
+				// Apply transformation for field drawing
+				this.ctx.save();
+				this.ctx.scale(this.scale, this.scale);
+				this.ctx.translate(this.offsetX, this.offsetY);
+
+				const fieldSpec = FIELD_TYPES[this.fieldType];
+				const fieldWidth = fieldSpec.width * 10;
+				const fieldHeight = fieldSpec.height * 10;
+				
+				// Center the field
+				const fieldX = (this.canvas.width / dpr / this.scale - fieldWidth) / 2;
+				const fieldY = (this.canvas.height / dpr / this.scale - fieldHeight) / 2;
+				
+				// Draw grass
+				this.ctx.fillStyle = '#32CD32';
+				this.ctx.fillRect(fieldX, fieldY, fieldWidth, fieldHeight);
+				
+				// Draw outline
+				this.ctx.strokeStyle = 'white';
+				this.ctx.lineWidth = 2;
+				this.ctx.strokeRect(fieldX, fieldY, fieldWidth, fieldHeight);
+				
+				// Draw center line
+				this.ctx.beginPath();
+				this.ctx.moveTo(fieldX + fieldWidth / 2, fieldY);
+				this.ctx.lineTo(fieldX + fieldWidth / 2, fieldY + fieldHeight);
+				this.ctx.stroke();
+				
+				// Draw center circle
+				this.ctx.beginPath();
+				this.ctx.arc(
+					fieldX + fieldWidth / 2,
+					fieldY + fieldHeight / 2,
+					fieldSpec.centerCircleRadius * 10,
+					0,
+					Math.PI * 2
+				);
+				this.ctx.stroke();
+				
+				// Draw center spot
+				this.ctx.beginPath();
+				this.ctx.arc(
+					fieldX + fieldWidth / 2,
+					fieldY + fieldHeight / 2,
+					2,
+					0,
+					Math.PI * 2
+				);
+				this.ctx.fill();
+				
+				// Only draw penalty areas for full and half field
+				if (this.fieldType === 'fullField' || this.fieldType === 'halfField') {
+					const penaltyWidth = fieldSpec.penaltyAreaWidth * 10;
+					const penaltyHeight = fieldSpec.penaltyAreaHeight * 10;
+					const penaltyY = fieldY + (fieldHeight - penaltyHeight) / 2;
+					
+					// Left penalty area
+					this.ctx.strokeRect(fieldX, penaltyY, penaltyWidth, penaltyHeight);
+					
+					// Right penalty area
+					if (this.fieldType === 'fullField') {
+						this.ctx.strokeRect(fieldX + fieldWidth - penaltyWidth, penaltyY, penaltyWidth, penaltyHeight);
+					}
+					
+					// Goal areas
+					if (fieldSpec.goalAreaWidth > 0) {
+						const goalAreaWidth = fieldSpec.goalAreaWidth * 10;
+						const goalAreaHeight = fieldSpec.goalAreaHeight * 10;
+						const goalAreaY = fieldY + (fieldHeight - goalAreaHeight) / 2;
+						
+						// Left goal area
+						this.ctx.strokeRect(fieldX, goalAreaY, goalAreaWidth, goalAreaHeight);
+						
+						// Right goal area
+						if (this.fieldType === 'fullField') {
+							this.ctx.strokeRect(fieldX + fieldWidth - goalAreaWidth, goalAreaY, goalAreaWidth, goalAreaHeight);
+						}
+					}
+					
+					// Penalty spots
+					this.ctx.beginPath();
+					this.ctx.arc(
+						fieldX + fieldSpec.penaltySpotDistance * 10,
+						fieldY + fieldHeight / 2,
+						2,
+						0,
+						Math.PI * 2
+					);
+					this.ctx.fill();
+					
+					if (this.fieldType === 'fullField') {
+						this.ctx.beginPath();
+						this.ctx.arc(
+							fieldX + fieldWidth - fieldSpec.penaltySpotDistance * 10,
+							fieldY + fieldHeight / 2,
+							2,
+							0,
+							Math.PI * 2
+						);
+						this.ctx.fill();
+					}
+				}
+				
+				this.ctx.restore();
+			}
+
+			redraw() {
+				if (!this.ctx) {
+					console.error("No context available for redraw");
+					return;
+				}
+				
+				// Start fresh - draw the complete field
+				this.drawField();
+				
+				// Draw all shapes
+				this.ctx.save();
+				this.ctx.scale(this.scale, this.scale);
+				this.ctx.translate(this.offsetX, this.offsetY);
+				
+				try {
+					this.shapes.forEach(shape => {
+						if (typeof shape.draw === 'function') {
+							shape.draw(this.ctx);
+						} else {
+							console.error('Invalid shape object:', shape);
+						}
+					});
+				} catch (err) {
+					console.error('Error drawing shapes:', err);
+				}
+				
+				this.ctx.restore();
+			}
+
+			clearField() {
+				this.shapes = [];
+				this.animationFrames = []; // Clear animation frames too
+				
+				// Stop any running animation
+				if (this.animationInterval) {
+					clearInterval(this.animationInterval);
+					this.animationInterval = null;
+				}
+				
+				this.redraw();
+				showStatusMessage('Field cleared');
+			}
+			
+            zoom(factor) {
+                // Calculate the center point
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                // Translate to keep the center point fixed
+                const newScale = this.scale * factor;
+                
+                // Limit the zoom level
+                if (newScale > 0.2 && newScale < 5) {
+                    // Adjust the offset to keep the center point fixed
+                    this.offsetX = (this.offsetX + centerX / this.scale) - centerX / newScale;
+                    this.offsetY = (this.offsetY + centerY / this.scale) - centerY / newScale;
+                    
+                    this.scale = newScale;
+                    this.redraw();
+                }
+            }
+
+            resetView() {
+                this.scale = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.redraw();
+                showStatusMessage('View reset');
+            }
+
+            updateSidebar() {
+                // Get sidebar elements
+                const sidebarTitle = document.getElementById('sidebar-title');
+                const sidebarContent = document.getElementById('sidebar-content');
+                
+                // Clear content
+                sidebarContent.innerHTML = '';
+                
+                // Show/hide sidebar based on tab
+                if (this.currentTab === 'whiteboard') {
+                    document.getElementById('sidebar').style.display = 'none';
+                    document.getElementById('canvas-container').style.flexGrow = 1;
+                    return;
+                }
+                
+                // Show sidebar for other tabs
+                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('canvas-container').style.flexGrow = 1;
+                
+                // Update sidebar content based on tab
+                switch (this.currentTab) {
+                    case 'formations':
+                        sidebarTitle.textContent = 'Formations';
+                        this.loadFormations(sidebarContent);
+                        break;
+                    case 'plays':
+                        sidebarTitle.textContent = 'Plays & Drills';
+                        this.loadPlaysAndDrills(sidebarContent);
+                        break;
+                    case 'settings':
+                        sidebarTitle.textContent = 'Settings';
+                        this.loadSettings(sidebarContent);
+                        break;
+                }
+            }
+
+            loadFormations(container) {
+                // Reset view for consistency
+				this.scale = 1;
+				this.offsetX = 0;
+				this.offsetY = 0;
+				
+				// Ensure we have a fresh context
+				this.ctx = this.canvas.getContext('2d');
+				const dpr = window.devicePixelRatio || 1;
+				this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+				
+				// Preset formations
+                const formations = [
+                    { name: '4-4-2', description: 'Classic formation with 4 defenders, 4 midfielders, and 2 forwards' },
+                    { name: '4-3-3', description: 'Attacking formation with 4 defenders, 3 midfielders, and 3 forwards' },
+                    { name: '3-5-2', description: 'Formation with 3 defenders, 5 midfielders, and 2 forwards' },
+                    { name: '4-2-3-1', description: 'Modern formation with 4 defenders, 2 defensive midfielders, 3 attacking midfielders, and 1 forward' },
+                    { name: '5-3-2', description: 'Defensive formation with 5 defenders, 3 midfielders, and 2 forwards' },
+                    { name: '3-4-3', description: 'Attacking formation with 3 defenders, 4 midfielders, and 3 forwards' },
+                    { name: '4-1-4-1', description: 'Control formation with 4 defenders, 1 defensive midfielder, 4 midfielders, and 1 forward' }
+                ];
+                
+                // Add user-saved formations
+                const userFormations = this.savedItems.formations || [];
+                
+                // Create preset formation items
+                const presetTitle = document.createElement('div');
+                presetTitle.className = 'sidebar-title';
+                presetTitle.textContent = 'Preset Formations';
+                container.appendChild(presetTitle);
+                
+                formations.forEach(formation => {
+                    const item = document.createElement('div');
+                    item.className = 'sidebar-item';
+                    item.innerHTML = `<strong>${formation.name}</strong><br><small>${formation.description}</small>`;
+                    item.addEventListener('click', () => this.loadFormation(formation.name));
+                    container.appendChild(item);
+                });
+                
+                // Add separator if there are user formations
+                if (userFormations.length > 0) {
+                    const separator = document.createElement('div');
+                    separator.className = 'sidebar-title';
+                    separator.textContent = 'My Formations';
+                    container.appendChild(separator);
+                    
+                    // Add user formations
+                    userFormations.forEach(formation => {
+                        const item = document.createElement('div');
+                        item.className = 'sidebar-item';
+                        item.innerHTML = `<strong>${formation.name}</strong>
+                                         <br><small>${formation.description || ''}</small>`;
+                        item.addEventListener('click', () => this.loadUserItem(formation));
+                        container.appendChild(item);
                     });
                 }
             }
-        }
 
-        function drawParticles() {
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.progress += 0.02 * animationSpeed.value / 5;
-                if (p.progress > 1) {
-                    particles.splice(i, 1);
-                } else {
-                    let x = lerp(p.x, p.targetX, p.progress);
-                    let y = lerp(p.y, p.targetY, p.progress);
-                    fill(0, 255, 0);
-                    noStroke();
-                    ellipse(x, y, 5, 5);
+            loadPlaysAndDrills(container) {
+                // Create tabs for Plays and Drills
+                const tabsDiv = document.createElement('div');
+                tabsDiv.className = 'tabs';
+                tabsDiv.innerHTML = `
+                    <div class="tab active" data-subtab="plays">Plays</div>
+                    <div class="tab" data-subtab="drills">Drills</div>
+                `;
+                container.appendChild(tabsDiv);
+                
+                // Create content div
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'sidebar-content';
+                container.appendChild(contentDiv);
+                
+                // Add event listeners to tabs
+                tabsDiv.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        tabsDiv.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        this.loadPlayOrDrillContent(contentDiv, tab.dataset.subtab);
+                    });
+                });
+                
+                // Load plays by default
+                this.loadPlayOrDrillContent(contentDiv, 'plays');
+            }
+
+            loadPlayOrDrillContent(container, type) {
+                container.innerHTML = '';
+                
+                // Preset items
+                const presets = type === 'plays' ? [
+                    { name: 'Counter Attack', description: 'Quick transition from defense to attack' },
+                    { name: 'Overlap Run', description: 'Wide defender makes attacking run past winger' },
+                    { name: 'Through Ball', description: 'Pass played into space behind defense' },
+                    { name: 'Give and Go', description: 'One-two passing combination to beat a defender' },
+                    { name: 'Switch Play', description: 'Changing the point of attack from one side to the other' }
+                ] : [
+                    { name: 'Passing Triangle', description: 'Basic passing pattern in triangles' },
+                    { name: 'Shooting Drill', description: 'Finishing practice with crosses' },
+                    { name: '1v1 Defending', description: 'Defense practice in one-on-one situations' },
+                    { name: 'Rondo', description: 'Keep-away possession game in a small area' },
+                    { name: '3v2 Attack', description: 'Attacking overload situation practice' },
+                    { name: 'Dribbling Course', description: 'Cone dribbling for skill development' }
+                ];
+                
+                // Add preset items
+                const presetTitle = document.createElement('div');
+                presetTitle.className = 'sidebar-title';
+                presetTitle.textContent = type === 'plays' ? 'Preset Plays' : 'Preset Drills';
+                container.appendChild(presetTitle);
+                
+                presets.forEach(item => {
+                    const element = document.createElement('div');
+                    element.className = 'sidebar-item';
+                    element.innerHTML = `<strong>${item.name}</strong><br><small>${item.description}</small>`;
+                    element.addEventListener('click', () => this.loadPresetItem(item.name, type));
+                    container.appendChild(element);
+                });
+                
+                // Add user items
+                const userItems = this.savedItems[type] || [];
+                
+                if (userItems.length > 0) {
+                    const userTitle = document.createElement('div');
+                    userTitle.className = 'sidebar-title';
+                    userTitle.textContent = type === 'plays' ? 'My Plays' : 'My Drills';
+                    container.appendChild(userTitle);
+                    
+                    userItems.forEach(item => {
+                        const element = document.createElement('div');
+                        element.className = 'sidebar-item';
+                        element.innerHTML = `<strong>${item.name}</strong><br><small>${item.description || ''}</small>`;
+                        element.addEventListener('click', () => this.loadUserItem(item));
+                        container.appendChild(element);
+                    });
                 }
             }
-        }
 
-        function sigmoid(x) {
-            return 1 / (1 + Math.exp(-x));
-        }
-
-        function resetSimulation() {
-            for (let neuron of neurons) {
-                neuron.value = 0;
+            loadSettings(container) {
+                container.innerHTML = `
+                    <div class="form-group">
+                        <label for="team-home-color">Home Team Color</label>
+                        <div class="color-options" id="team-home-color">
+                            <div class="color-option selected" style="background-color: #ff0000;" data-color="#ff0000"></div>
+                            <div class="color-option" style="background-color: #ff8000;" data-color="#ff8000"></div>
+                            <div class="color-option" style="background-color: #008000;" data-color="#008000"></div>
+                            <div class="color-option" style="background-color: #0000ff;" data-color="#0000ff"></div>
+                            <div class="color-option" style="background-color: #800080;" data-color="#800080"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="team-away-color">Away Team Color</label>
+                        <div class="color-options" id="team-away-color">
+                            <div class="color-option" style="background-color: #ff0000;" data-color="#ff0000"></div>
+                            <div class="color-option" style="background-color: #ff8000;" data-color="#ff8000"></div>
+                            <div class="color-option" style="background-color: #008000;" data-color="#008000"></div>
+                            <div class="color-option selected" style="background-color: #0000ff;" data-color="#0000ff"></div>
+                            <div class="color-option" style="background-color: #800080;" data-color="#800080"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="default-field">Default Field Type</label>
+                        <select id="default-field" class="form-control">
+                            <option value="fullField">Full Field</option>
+                            <option value="halfField">Half Field</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="animation-autoplay">Animation Autoplay</label>
+                        <select id="animation-autoplay" class="form-control">
+                            <option value="on">On</option>
+                            <option value="off">Off</option>
+                        </select>
+                    </div>
+                    
+                    <button id="reset-settings" class="btn btn-secondary">Reset to Defaults</button>
+                    <button id="save-settings" class="btn btn-primary">Save Settings</button>
+                `;
+                
+                // Add event listeners
+                document.querySelectorAll('#team-home-color .color-option, #team-away-color .color-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        const container = e.target.parentElement;
+                        container.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                        e.target.classList.add('selected');
+                        
+                        // Update default colors
+                        if (container.id === 'team-home-color') {
+                            DEFAULT_COLORS.homePlayer = e.target.dataset.color;
+                            document.querySelector('#homePlayer .color-indicator').style.backgroundColor = e.target.dataset.color;
+                        } else {
+                            DEFAULT_COLORS.awayPlayer = e.target.dataset.color;
+                            document.querySelector('#awayPlayer .color-indicator').style.backgroundColor = e.target.dataset.color;
+                        }
+                    });
+                });
+                
+                document.getElementById('default-field').addEventListener('change', e => {
+                    this.fieldType = e.target.value;
+                    this.redraw();
+                });
+                
+                document.getElementById('save-settings').addEventListener('click', () => {
+                    showStatusMessage('Settings saved');
+                });
+                
+                document.getElementById('reset-settings').addEventListener('click', () => {
+                    if (confirm('Reset all settings to defaults?')) {
+                        // Reset colors
+                        DEFAULT_COLORS.homePlayer = '#ff0000';
+                        DEFAULT_COLORS.awayPlayer = '#0000ff';
+                        
+                        // Update UI
+                        document.querySelector('#homePlayer .color-indicator').style.backgroundColor = DEFAULT_COLORS.homePlayer;
+                        document.querySelector('#awayPlayer .color-indicator').style.backgroundColor = DEFAULT_COLORS.awayPlayer;
+                        
+                        // Reset field type
+                        this.fieldType = 'fullField';
+                        document.getElementById('fieldType').value = 'fullField';
+                        document.getElementById('default-field').value = 'fullField';
+                        
+                        this.redraw();
+                        showStatusMessage('Settings reset to defaults');
+                    }
+                });
             }
-            particles = [];
-        }
 
-        function toggleSimulation() {
-            isRunning = !isRunning;
-            document.getElementById('startPauseBtn').textContent = isRunning ? 'Pause' : 'Start';
-        }
+            loadFormation(name) {
+                // Clear the current field
+                this.shapes = [];
+                
+                // Field dimensions
+                const fieldWidth = FIELD_TYPES[this.fieldType].width * 10;
+                const fieldHeight = FIELD_TYPES[this.fieldType].height * 10;
+                
+                // Get field position
+                const fieldX = (this.canvas.width / this.scale - fieldWidth) / 2 - this.offsetX;
+                const fieldY = (this.canvas.height / this.scale - fieldHeight) / 2 - this.offsetY;
+                
+                // Create formation based on name
+                switch (name) {
+                    case '4-4-2':
+                        // Goalkeeper
+                        this.shapes.push(new Player(fieldX + 15, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '1', 'GK'));
+                        
+                        // Defenders
+                        this.shapes.push(new Player(fieldX + 60, fieldY + 20, DEFAULT_COLORS.homePlayer, '2', 'RB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 - 30, DEFAULT_COLORS.homePlayer, '5', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 + 30, DEFAULT_COLORS.homePlayer, '6', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '3', 'LB'));
+                        
+                        // Midfielders
+                        this.shapes.push(new Player(fieldX + 160, fieldY + 20, DEFAULT_COLORS.homePlayer, '7', 'RM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2 - 30, DEFAULT_COLORS.homePlayer, '8', 'CM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2 + 30, DEFAULT_COLORS.homePlayer, '4', 'CM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '11', 'LM'));
+                        
+                        // Forwards
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2 - 40, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2 + 40, DEFAULT_COLORS.homePlayer, '10', 'ST'));
+                        break;
+                        
+                    case '4-3-3':
+                        // Goalkeeper
+                        this.shapes.push(new Player(fieldX + 15, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '1', 'GK'));
+                        
+                        // Defenders
+                        this.shapes.push(new Player(fieldX + 60, fieldY + 20, DEFAULT_COLORS.homePlayer, '2', 'RB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 - 30, DEFAULT_COLORS.homePlayer, '5', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 + 30, DEFAULT_COLORS.homePlayer, '6', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '3', 'LB'));
+                        
+                        // Midfielders
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '4', 'DM'));
+                        this.shapes.push(new Player(fieldX + 180, fieldY + fieldHeight / 2 - 50, DEFAULT_COLORS.homePlayer, '8', 'CM'));
+                        this.shapes.push(new Player(fieldX + 180, fieldY + fieldHeight / 2 + 50, DEFAULT_COLORS.homePlayer, '10', 'CM'));
+                        
+                        // Forwards
+                        this.shapes.push(new Player(fieldX + 300, fieldY + 20, DEFAULT_COLORS.homePlayer, '7', 'RW'));
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '11', 'LW'));
+                        break;
+                        
+                    case '3-5-2':
+                        // Goalkeeper
+                        this.shapes.push(new Player(fieldX + 15, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '1', 'GK'));
+                        
+                        // Defenders
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 - 50, DEFAULT_COLORS.homePlayer, '5', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '6', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 + 50, DEFAULT_COLORS.homePlayer, '4', 'CB'));
+                        
+                        // Midfielders
+                        this.shapes.push(new Player(fieldX + 140, fieldY + 20, DEFAULT_COLORS.homePlayer, '2', 'RWB'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2 - 40, DEFAULT_COLORS.homePlayer, '8', 'CM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '10', 'AM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2 + 40, DEFAULT_COLORS.homePlayer, '6', 'CM'));
+                        this.shapes.push(new Player(fieldX + 140, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '3', 'LWB'));
+                        
+                        // Forwards
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2 - 40, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2 + 40, DEFAULT_COLORS.homePlayer, '11', 'ST'));
+                        break;
+                        
+                    case '4-2-3-1':
+                        // Goalkeeper
+                        this.shapes.push(new Player(fieldX + 15, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '1', 'GK'));
+                        
+                        // Defenders
+                        this.shapes.push(new Player(fieldX + 60, fieldY + 20, DEFAULT_COLORS.homePlayer, '2', 'RB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 - 30, DEFAULT_COLORS.homePlayer, '5', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 + 30, DEFAULT_COLORS.homePlayer, '6', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '3', 'LB'));
+                        
+                        // Defensive Midfielders
+                        this.shapes.push(new Player(fieldX + 140, fieldY + fieldHeight / 2 - 30, DEFAULT_COLORS.homePlayer, '4', 'DM'));
+                        this.shapes.push(new Player(fieldX + 140, fieldY + fieldHeight / 2 + 30, DEFAULT_COLORS.homePlayer, '8', 'DM'));
+                        
+                        // Attacking Midfielders
+                        this.shapes.push(new Player(fieldX + 220, fieldY + 20, DEFAULT_COLORS.homePlayer, '7', 'RM'));
+                        this.shapes.push(new Player(fieldX + 220, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '10', 'AM'));
+                        this.shapes.push(new Player(fieldX + 220, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '11', 'LM'));
+                        
+                        // Forward
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+                        break;
+                        
+                    case '5-3-2':
+                        // Goalkeeper
+                        this.shapes.push(new Player(fieldX + 15, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '1', 'GK'));
+                        
+                        // Defenders
+                        this.shapes.push(new Player(fieldX + 60, fieldY + 20, DEFAULT_COLORS.homePlayer, '2', 'RWB'));
+                        this.shapes.push(new Player(fieldX + 50, fieldY + fieldHeight / 2 - 50, DEFAULT_COLORS.homePlayer, '5', 'CB'));
+                        this.shapes.push(new Player(fieldX + 40, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '6', 'CB'));
+                        this.shapes.push(new Player(fieldX + 50, fieldY + fieldHeight / 2 + 50, DEFAULT_COLORS.homePlayer, '4', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '3', 'LWB'));
+                        
+                        // Midfielders
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2 - 40, DEFAULT_COLORS.homePlayer, '8', 'CM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '6', 'CM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2 + 40, DEFAULT_COLORS.homePlayer, '10', 'CM'));
+                        
+                        // Forwards
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2 - 40, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2 + 40, DEFAULT_COLORS.homePlayer, '11', 'ST'));
+                        break;
+                        
+                    case '3-4-3':
+                        // Goalkeeper
+                        this.shapes.push(new Player(fieldX + 15, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '1', 'GK'));
+                        
+                        // Defenders
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 - 50, DEFAULT_COLORS.homePlayer, '5', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '6', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 + 50, DEFAULT_COLORS.homePlayer, '4', 'CB'));
+                        
+                        // Midfielders
+                        this.shapes.push(new Player(fieldX + 160, fieldY + 20, DEFAULT_COLORS.homePlayer, '2', 'RM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2 - 40, DEFAULT_COLORS.homePlayer, '8', 'CM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 2 + 40, DEFAULT_COLORS.homePlayer, '6', 'CM'));
+                        this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '3', 'LM'));
+                        
+                        // Forwards
+                        this.shapes.push(new Player(fieldX + 300, fieldY + 20, DEFAULT_COLORS.homePlayer, '7', 'RW'));
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '11', 'LW'));
+                        break;
+                        
+                    case '4-1-4-1':
+                        // Goalkeeper
+                        this.shapes.push(new Player(fieldX + 15, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '1', 'GK'));
+                        
+                        // Defenders
+                        this.shapes.push(new Player(fieldX + 60, fieldY + 20, DEFAULT_COLORS.homePlayer, '2', 'RB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 - 30, DEFAULT_COLORS.homePlayer, '5', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight / 2 + 30, DEFAULT_COLORS.homePlayer, '6', 'CB'));
+                        this.shapes.push(new Player(fieldX + 60, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '3', 'LB'));
+                        
+                        // Defensive Midfielder
+                        this.shapes.push(new Player(fieldX + 130, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '4', 'DM'));
+                        
+                        // Midfielders
+                        this.shapes.push(new Player(fieldX + 200, fieldY + 20, DEFAULT_COLORS.homePlayer, '7', 'RM'));
+                        this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 2 - 40, DEFAULT_COLORS.homePlayer, '8', 'CM'));
+                        this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 2 + 40, DEFAULT_COLORS.homePlayer, '10', 'CM'));
+                        this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight - 20, DEFAULT_COLORS.homePlayer, '11', 'LM'));
+                        
+                        // Forward
+                        this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+                        break;
+						}
+                
+                this.redraw();
+                showStatusMessage(`Formation loaded: ${name}`);
+            }
 
-        function mousePressed() {
-            // Check if mouse is over an input neuron
-            for (let i = 0; i < 5; i++) {
-                let d = dist(mouseX, mouseY, neurons[i].x, neurons[i].y);
-                if (d < 15) {
-                    neurons[i].value = 1 - neurons[i].value; // Toggle between 0 and 1
+			loadPresetItem(name, type) {
+				// Reset view and transformations
+				this.scale = 1;
+				this.offsetX = 0;
+				this.offsetY = 0;
+				
+				// Ensure we have a fresh context
+				this.ctx = this.canvas.getContext('2d');
+				const dpr = window.devicePixelRatio || 1;
+				this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+				
+				// Clear the current field
+				this.shapes = [];
+				
+				// Field dimensions
+				const fieldSpec = FIELD_TYPES[this.fieldType];
+				const fieldWidth = fieldSpec.width * 10;
+				const fieldHeight = fieldSpec.height * 10;
+				
+				// Calculate field position properly
+				const canvasWidth = this.canvas.width / dpr;
+				const canvasHeight = this.canvas.height / dpr;
+				const fieldX = (canvasWidth - fieldWidth) / 2;
+				const fieldY = (canvasHeight - fieldHeight) / 2;
+				
+				console.log("Loading preset:", name, type);
+				console.log("Field position:", fieldX, fieldY);
+				
+				// Create preset play or drill
+				if (type === 'plays' || type === 'drills') {
+					// Add a generic placeholder team setup based on the name of the play/drill
+					if (type === 'plays') {
+						switch (name) {
+							case 'Counter Attack':
+								// Goalkeeper
+								this.shapes.push(new Player(fieldX + 50, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '1', 'GK'));
+								
+								// Defenders in defensive position
+								this.shapes.push(new Player(fieldX + 120, fieldY + fieldHeight / 3, DEFAULT_COLORS.homePlayer, '2', 'RB'));
+								this.shapes.push(new Player(fieldX + 100, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '5', 'CB'));
+								this.shapes.push(new Player(fieldX + 120, fieldY + fieldHeight * 2/3, DEFAULT_COLORS.homePlayer, '3', 'LB'));
+								
+								// Midfielders ready to counter
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 4, DEFAULT_COLORS.homePlayer, '7', 'RM'));
+								this.shapes.push(new Player(fieldX + 220, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '10', 'AM'));
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight * 3/4, DEFAULT_COLORS.homePlayer, '11', 'LM'));
+								
+								// Forward making a run
+								this.shapes.push(new Player(fieldX + 350, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+								
+								// Ball with the attacking midfielder
+								this.shapes.push(new Ball(fieldX + 220, fieldY + fieldHeight / 2));
+								
+								// Add arrows to show movement
+								this.shapes.push(new Arrow(fieldX + 220, fieldY + fieldHeight / 2, fieldX + 320, fieldY + fieldHeight / 2, '#ff0000'));
+								this.shapes.push(new PassArrow(fieldX + 220, fieldY + fieldHeight / 2, fieldX + 350, fieldY + fieldHeight / 2, '#0000ff'));
+								break;
+							
+							case 'Overlap Run':
+								// Basic setup for overlap run
+								this.shapes.push(new Player(fieldX + 250, fieldY + fieldHeight / 4, DEFAULT_COLORS.homePlayer, '2', 'RB'));
+								this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 4, DEFAULT_COLORS.homePlayer, '7', 'RW'));
+								this.shapes.push(new Ball(fieldX + 300, fieldY + fieldHeight / 4 + 10));
+								
+								// Arrow showing the overlapping run
+								this.shapes.push(new DribbleArrow(
+									fieldX + 250, fieldY + fieldHeight / 4,
+									fieldX + 350, fieldY + fieldHeight / 4 - 30,
+									'#ff0000'
+								));
+								
+								// Pass arrow
+								this.shapes.push(new PassArrow(
+									fieldX + 300, fieldY + fieldHeight / 4,
+									fieldX + 350, fieldY + fieldHeight / 4,
+									'#0000ff'
+								));
+								break;
+							
+							// Add other plays as needed
+							
+							case 'Through Ball':
+								// Initial setup
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 3, DEFAULT_COLORS.homePlayer, '8', 'CM'));
+								this.shapes.push(new Player(fieldX + 170, fieldY + fieldHeight / 2, DEFAULT_COLORS.awayPlayer, 'D', 'DEF'));
+								this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2 - 20, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+								this.shapes.push(new Ball(fieldX + 200, fieldY + fieldHeight / 3 + 15));
+								
+								// Defender positioning
+								this.shapes.push(new Player(fieldX + 250, fieldY + fieldHeight / 2 + 20, DEFAULT_COLORS.awayPlayer, 'D', 'DEF'));
+								
+								// Show the through ball pass
+								this.shapes.push(new PassArrow(
+									fieldX + 200, fieldY + fieldHeight / 3,
+									fieldX + 350, fieldY + fieldHeight / 2 - 30,
+									'#0000ff'
+								));
+								
+								// Show striker run
+								this.shapes.push(new DribbleArrow(
+									fieldX + 300, fieldY + fieldHeight / 2 - 20,
+									fieldX + 380, fieldY + fieldHeight / 2 - 40,
+									'#ff0000'
+								));
+								break;
+
+							case 'Give and Go':
+								// Players setup
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '10', 'AM'));
+								this.shapes.push(new Player(fieldX + 170, fieldY + fieldHeight / 2 + 30, DEFAULT_COLORS.awayPlayer, 'D', 'DEF'));
+								this.shapes.push(new Player(fieldX + 280, fieldY + fieldHeight / 2 + 10, DEFAULT_COLORS.homePlayer, '9', 'ST'));
+								this.shapes.push(new Ball(fieldX + 200, fieldY + fieldHeight / 2 + 15));
+								
+								// First pass
+								this.shapes.push(new PassArrow(
+									fieldX + 200, fieldY + fieldHeight / 2,
+									fieldX + 280, fieldY + fieldHeight / 2 + 10,
+									'#0000ff'
+								));
+								
+								// Player movement
+								this.shapes.push(new DribbleArrow(
+									fieldX + 200, fieldY + fieldHeight / 2,
+									fieldX + 260, fieldY + fieldHeight / 2 - 30,
+									'#ff0000'
+								));
+								
+								// Return pass
+								this.shapes.push(new PassArrow(
+									fieldX + 280, fieldY + fieldHeight / 2 + 10,
+									fieldX + 260, fieldY + fieldHeight / 2 - 30,
+									'#00ff00'
+								));
+								break;
+
+							case 'Switch Play':
+								// Left side congestion
+								this.shapes.push(new Player(fieldX + 150, fieldY + fieldHeight / 3, DEFAULT_COLORS.homePlayer, '6', 'CM'));
+								this.shapes.push(new Player(fieldX + 130, fieldY + fieldHeight / 4, DEFAULT_COLORS.homePlayer, '3', 'LB'));
+								this.shapes.push(new Player(fieldX + 180, fieldY + fieldHeight / 3.5, DEFAULT_COLORS.homePlayer, '10', 'CAM'));
+								
+								// Opposition players blocking left side
+								this.shapes.push(new Player(fieldX + 170, fieldY + fieldHeight / 2.5, DEFAULT_COLORS.awayPlayer, 'D1', ''));
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 3, DEFAULT_COLORS.awayPlayer, 'D2', ''));
+								this.shapes.push(new Player(fieldX + 160, fieldY + fieldHeight / 3.8, DEFAULT_COLORS.awayPlayer, 'D3', ''));
+								
+								// Right wing in space
+								this.shapes.push(new Player(fieldX + 350, fieldY + fieldHeight / 5, DEFAULT_COLORS.homePlayer, '7', 'RW'));
+								
+								// Ball with the midfielder
+								this.shapes.push(new Ball(fieldX + 150, fieldY + fieldHeight / 3));
+								
+								// Long diagonal switch pass
+								this.shapes.push(new PassArrow(
+									fieldX + 150, fieldY + fieldHeight / 3,
+									fieldX + 350, fieldY + fieldHeight / 5,
+									'#0000ff'
+								));
+								break;
+							
+							default:
+								// Default generic setup
+								this.shapes.push(new Player(fieldX + 50, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '1', 'GK'));
+								this.shapes.push(new Player(fieldX + 100, fieldY + fieldHeight / 3, DEFAULT_COLORS.homePlayer, '2', 'DEF'));
+								this.shapes.push(new Player(fieldX + 100, fieldY + fieldHeight * 2/3, DEFAULT_COLORS.homePlayer, '3', 'DEF'));
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 3, DEFAULT_COLORS.homePlayer, '7', 'MID'));
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight * 2/3, DEFAULT_COLORS.homePlayer, '8', 'MID'));
+								this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '9', 'FWD'));
+								this.shapes.push(new Ball(fieldX + 200, fieldY + fieldHeight / 2));
+						}
+					} else { // drills
+						switch (name) {
+							case 'Passing Triangle':
+								// Three players in a triangle
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 2 - 60, DEFAULT_COLORS.homePlayer, '1', 'A'));
+								this.shapes.push(new Player(fieldX + 150, fieldY + fieldHeight / 2 + 40, DEFAULT_COLORS.homePlayer, '2', 'B'));
+								this.shapes.push(new Player(fieldX + 250, fieldY + fieldHeight / 2 + 40, DEFAULT_COLORS.homePlayer, '3', 'C'));
+								
+								// Ball with player A
+								this.shapes.push(new Ball(fieldX + 200, fieldY + fieldHeight / 2 - 45));
+								
+								// Passing arrows forming a triangle
+								this.shapes.push(new PassArrow(fieldX + 200, fieldY + fieldHeight / 2 - 60, fieldX + 150, fieldY + fieldHeight / 2 + 40));
+								this.shapes.push(new PassArrow(fieldX + 150, fieldY + fieldHeight / 2 + 40, fieldX + 250, fieldY + fieldHeight / 2 + 40));
+								this.shapes.push(new PassArrow(fieldX + 250, fieldY + fieldHeight / 2 + 40, fieldX + 200, fieldY + fieldHeight / 2 - 60));
+								break;
+							
+							case 'Shooting Drill':
+								// Players
+								this.shapes.push(new Player(fieldX + 150, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, 'A', 'Server'));
+								this.shapes.push(new Player(fieldX + 280, fieldY + fieldHeight / 3, DEFAULT_COLORS.homePlayer, 'B', 'Shooter'));
+								
+								// Goal at the end
+								this.shapes.push(new Goal(fieldX + 400, fieldY + fieldHeight / 2, 30, 10));
+								
+								// Ball with server
+								this.shapes.push(new Ball(fieldX + 150, fieldY + fieldHeight / 2 + 15));
+								
+								// Pass and shot arrows
+								this.shapes.push(new PassArrow(fieldX + 150, fieldY + fieldHeight / 2, fieldX + 280, fieldY + fieldHeight / 3));
+								this.shapes.push(new Arrow(fieldX + 280, fieldY + fieldHeight / 3, fieldX + 390, fieldY + fieldHeight / 2));
+								break;
+							
+							// Add other drills as needed
+							
+							case '1v1 Defending':
+								// Defender and attacker
+								this.shapes.push(new Player(fieldX + 230, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, 'D', 'DEF'));
+								this.shapes.push(new Player(fieldX + 300, fieldY + fieldHeight / 2, DEFAULT_COLORS.awayPlayer, 'A', 'ATT'));
+								
+								// Starting position for drill
+								this.shapes.push(new Player(fieldX + 180, fieldY + fieldHeight / 2, DEFAULT_COLORS.neutralPlayer, 'C', 'Coach'));
+								
+								// Ball with attacker
+								this.shapes.push(new Ball(fieldX + 300, fieldY + fieldHeight / 2 + 15));
+								
+								// Boundary cones
+								this.shapes.push(new Cone(fieldX + 200, fieldY + fieldHeight / 3, DEFAULT_COLORS.cone));
+								this.shapes.push(new Cone(fieldX + 200, fieldY + fieldHeight * 2/3, DEFAULT_COLORS.cone));
+								this.shapes.push(new Cone(fieldX + 400, fieldY + fieldHeight / 3, DEFAULT_COLORS.cone));
+								this.shapes.push(new Cone(fieldX + 400, fieldY + fieldHeight * 2/3, DEFAULT_COLORS.cone));
+								
+								// Defender's jockey movement
+								this.shapes.push(new DribbleArrow(
+									fieldX + 230, fieldY + fieldHeight / 2,
+									fieldX + 270, fieldY + fieldHeight / 2 - 20,
+									'#ff0000'
+								));
+								break;
+
+							case 'Rondo':
+								// Circle of 5 players
+								const centerX = fieldX + fieldWidth / 3;
+								const centerY = fieldY + fieldHeight / 2;
+								const radius = 50;
+								
+								// Outer players
+								for (let i = 0; i < 5; i++) {
+									const angle = (i * 2 * Math.PI / 5);
+									const x = centerX + radius * Math.cos(angle);
+									const y = centerY + radius * Math.sin(angle);
+									this.shapes.push(new Player(x, y, DEFAULT_COLORS.homePlayer, (i+1).toString(), ''));
+								}
+								
+								// Defender in the middle
+								this.shapes.push(new Player(centerX, centerY, DEFAULT_COLORS.awayPlayer, 'D', 'DEF'));
+								
+								// Ball with one of the outer players
+								this.shapes.push(new Ball(centerX + radius, centerY));
+								
+								// Passing arrows showing the pattern
+								for (let i = 0; i < 5; i++) {
+									const fromAngle = (i * 2 * Math.PI / 5);
+									const toAngle = ((i+2) % 5 * 2 * Math.PI / 5);
+									
+									const fromX = centerX + radius * Math.cos(fromAngle);
+									const fromY = centerY + radius * Math.sin(fromAngle);
+									const toX = centerX + radius * Math.cos(toAngle);
+									const toY = centerY + radius * Math.sin(toAngle);
+									
+									this.shapes.push(new PassArrow(fromX, fromY, toX, toY, '#0000ff'));
+								}
+								break;
+
+							case '3v2 Attack':
+								// Attackers
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 2 - 60, DEFAULT_COLORS.homePlayer, '10', 'CAM'));
+								this.shapes.push(new Player(fieldX + 200, fieldY + fieldHeight / 2 + 60, DEFAULT_COLORS.homePlayer, '7', 'RW'));
+								this.shapes.push(new Player(fieldX + 150, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '11', 'LW'));
+								
+								// Defenders
+								this.shapes.push(new Player(fieldX + 350, fieldY + fieldHeight / 2 - 30, DEFAULT_COLORS.awayPlayer, 'D1', 'DEF'));
+								this.shapes.push(new Player(fieldX + 350, fieldY + fieldHeight / 2 + 30, DEFAULT_COLORS.awayPlayer, 'D2', 'DEF'));
+								
+								// Goal at the end
+								this.shapes.push(new Goal(fieldX + 450, fieldY + fieldHeight / 2, 30, 10));
+								
+								// Ball with the CAM
+								this.shapes.push(new Ball(fieldX + 200, fieldY + fieldHeight / 2 - 45));
+								
+								// Movement and passing options
+								this.shapes.push(new PassArrow(fieldX + 200, fieldY + fieldHeight / 2 - 60, fieldX + 200, fieldY + fieldHeight / 2 + 60, '#0000ff'));
+								this.shapes.push(new PassArrow(fieldX + 200, fieldY + fieldHeight / 2 - 60, fieldX + 150, fieldY + fieldHeight / 2, '#0000ff'));
+								this.shapes.push(new DribbleArrow(fieldX + 200, fieldY + fieldHeight / 2 - 60, fieldX + 300, fieldY + fieldHeight / 2 - 60, '#ff0000'));
+								break;
+
+							case 'Dribbling Course':
+								// Set up cones in a dribbling pattern
+								const startX = fieldX + 150;
+								const startY = fieldY + fieldHeight / 2;
+								const spacing = 30;
+								
+								// Slalom cones
+								for (let i = 0; i < 6; i++) {
+									this.shapes.push(new Cone(startX + i * spacing, startY, DEFAULT_COLORS.cone));
+								}
+								
+								// Figure 8 cones
+								this.shapes.push(new Cone(startX + 7 * spacing, startY - spacing, DEFAULT_COLORS.cone));
+								this.shapes.push(new Cone(startX + 7 * spacing, startY + spacing, DEFAULT_COLORS.cone));
+								
+								// Final cones
+								this.shapes.push(new Cone(startX + 10 * spacing, startY - spacing, DEFAULT_COLORS.cone));
+								this.shapes.push(new Cone(startX + 10 * spacing, startY + spacing, DEFAULT_COLORS.cone));
+								
+								// Player at start
+								this.shapes.push(new Player(startX - 30, startY, DEFAULT_COLORS.homePlayer, 'P', 'Player'));
+								
+								// Ball with player
+								this.shapes.push(new Ball(startX - 15, startY));
+								
+								// Dribble path
+								let pathPoints = [
+									{x: startX - 30, y: startY},
+									{x: startX, y: startY - 15},
+									{x: startX + spacing, y: startY + 15},
+									{x: startX + 2 * spacing, y: startY - 15},
+									{x: startX + 3 * spacing, y: startY + 15},
+									{x: startX + 4 * spacing, y: startY - 15},
+									{x: startX + 5 * spacing, y: startY + 15},
+									{x: startX + 6 * spacing, y: startY}
+								];
+								
+								// Create dribbling path with segments
+								for (let i = 0; i < pathPoints.length - 1; i++) {
+									this.shapes.push(new DribbleArrow(
+										pathPoints[i].x, pathPoints[i].y,
+										pathPoints[i+1].x, pathPoints[i+1].y,
+										'#ff0000'
+									));
+								}
+								
+								// Figure 8 path
+								this.shapes.push(new DribbleArrow(
+									pathPoints[pathPoints.length-1].x, pathPoints[pathPoints.length-1].y,
+									startX + 7 * spacing - 15, startY - 10,
+									'#ff0000'
+								));
+								
+								this.shapes.push(new DribbleArrow(
+									startX + 7 * spacing - 15, startY - 10,
+									startX + 7 * spacing + 15, startY + 10,
+									'#ff0000'
+								));
+								
+								this.shapes.push(new DribbleArrow(
+									startX + 7 * spacing + 15, startY + 10,
+									startX + 7 * spacing - 15, startY + 20,
+									'#ff0000'
+								));
+								
+								// Final straight
+								this.shapes.push(new DribbleArrow(
+									startX + 7 * spacing - 15, startY + 20,
+									startX + 10 * spacing, startY,
+									'#ff0000'
+								));
+								break;
+							
+							
+							default:
+								// Default generic setup for a drill
+								this.shapes.push(new Player(fieldX + 150, fieldY + fieldHeight / 2 - 50, DEFAULT_COLORS.homePlayer, '1', 'Coach'));
+								this.shapes.push(new Player(fieldX + 250, fieldY + fieldHeight / 2, DEFAULT_COLORS.homePlayer, '2', 'Player'));
+								this.shapes.push(new Ball(fieldX + 200, fieldY + fieldHeight / 2));
+								this.shapes.push(new Cone(fieldX + 200, fieldY + fieldHeight / 2 - 100, DEFAULT_COLORS.cone));
+								this.shapes.push(new Cone(fieldX + 200, fieldY + fieldHeight / 2 + 100, DEFAULT_COLORS.cone));
+						}
+					}
+					
+					// Add title text label for all plays/drills
+					this.shapes.push(new TextLabel(
+						fieldX + fieldWidth / 2, 
+						fieldY + 30, 
+						`${name} - ${type === 'plays' ? 'Play' : 'Drill'}`, 
+						20, 
+						"#000000"
+					));
+				}
+				
+				this.redraw();
+				showStatusMessage(`${type === 'plays' ? 'Play' : 'Drill'} loaded: ${name}`);
+			}
+
+            loadUserItem(item) {
+                try {
+                    // Simple implementation to handle basic saved items
+                    this.shapes = [];
+                    
+                    // Add a text note about the loaded item
+                    const centerX = this.canvas.width / (2 * this.scale) - this.offsetX;
+                    const centerY = this.canvas.height / (2 * this.scale) - this.offsetY;
+                    
+                    this.shapes.push(new TextLabel(
+                        centerX,
+                        centerY,
+                        `Loaded: ${item.name}`,
+                        18,
+                        "#000000"
+                    ));
+                    
+                    this.redraw();
+                    showStatusMessage(`Loaded: ${item.name}`);
+                } catch (error) {
+                    console.error('Error loading saved item:', error);
+                    showStatusMessage('Error loading the saved item', 3000);
                 }
             }
+
+            openSaveDialog() {
+                document.getElementById('save-dialog').classList.add('open');
+                document.getElementById('save-name').value = '';
+                document.getElementById('save-description').value = '';
+                document.getElementById('save-name').focus();
+            }
+
+            openLoadDialog() {
+                // Populate load dialog with items
+                const loadItems = document.getElementById('load-items');
+                loadItems.innerHTML = '';
+                
+                const category = document.getElementById('load-category').value;
+                
+                // Add placeholder items
+                const presets = [
+                    {name: '4-4-2 Formation', category: 'formations'},
+                    {name: 'Counter Attack', category: 'plays'},
+                    {name: 'Passing Triangle', category: 'drills'}
+                ];
+                
+                presets.forEach(item => {
+                    if (category === 'all' || category === item.category) {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'grid-item';
+                        itemEl.innerHTML = `
+                            <div class="grid-item-img">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                            </div>
+                            <div class="grid-item-title">${item.name}</div>
+                        `;
+                        
+                        itemEl.addEventListener('click', () => {
+                            document.getElementById('load-dialog').classList.remove('open');
+                            if (item.category === 'formations') {
+                                this.loadFormation(item.name.split(' ')[0]);
+                            } else {
+                                this.loadPresetItem(item.name, item.category);
+                            }
+                        });
+                        
+                        loadItems.appendChild(itemEl);
+                    }
+                });
+                
+                document.getElementById('load-dialog').classList.add('open');
+            }
+
+            saveCurrentDiagram() {
+                const name = document.getElementById('save-name').value.trim();
+                const category = document.getElementById('save-category').value;
+                
+                if (!name) {
+                    alert('Please enter a name for this diagram');
+                    return;
+                }
+                
+                // Simple saving mechanism
+                showStatusMessage(`Diagram saved as: ${name}`);
+                document.getElementById('save-dialog').classList.remove('open');
+            }
+
+            loadFromLocalStorage() {
+                // Simple stub - would actually load from localStorage
+                return {
+                    formations: [],
+                    plays: [],
+                    drills: [],
+                    other: []
+                };
+            }
+
+            saveToLocalStorage() {
+                // Simple stub - would actually save to localStorage
+                console.log('Saved to localStorage');
+            }
+
+            // Animation methods
+			startAnimation() {
+				// Show animation controls
+				const animControls = document.getElementById('animation-controls');
+				if (animControls) {
+					animControls.style.display = 'flex';
+				} else {
+					console.warn('Animation controls element not found');
+				}
+				
+				if (this.animationFrames.length === 0) {
+					showStatusMessage('No animation frames captured yet. Use "Capture Frame" to add frames.');
+					return;
+				}
+				
+				// Reset to the first frame
+				this.animationFrame = 0;
+				this.isAnimating = true;
+				
+				// Set up animation interval
+				if (this.animationInterval) {
+					clearInterval(this.animationInterval);
+				}
+				
+				this.animationInterval = setInterval(() => {
+					// Load the next frame
+					this.animationFrame = (this.animationFrame + 1) % this.animationFrames.length;
+					const frame = this.animationFrames[this.animationFrame];
+					
+					// Set field type
+					this.fieldType = frame.fieldType;
+					
+					// Create new shape objects from the stored data
+					this.shapes = frame.shapes.map(shapeData => {
+						let shape;
+						switch (shapeData.type) {
+							case 'player':
+								shape = new Player(shapeData.x, shapeData.y, shapeData.color, 
+												 shapeData.number, shapeData.position);
+								break;
+							case 'ball':
+								shape = new Ball(shapeData.x, shapeData.y);
+								break;
+							case 'cone':
+								shape = new Cone(shapeData.x, shapeData.y, shapeData.color);
+								break;
+							// Add cases for other shape types as needed
+						}
+						if (shape) {
+							shape.selected = shapeData.selected;
+						}
+						return shape;
+					}).filter(shape => shape !== undefined);
+					
+					// Redraw
+					this.redraw();
+					
+				}, 1000 / this.animationSpeed);
+				
+				showStatusMessage('Animation playing - Frame 1/' + this.animationFrames.length);
+			}
+
+            pauseAnimation() {
+                showStatusMessage('Animation paused');
+            }
+
+            resetAnimation() {
+                showStatusMessage('Animation reset');
+            }
+
+            loadPresets() {
+                // Add animation-related items to the toolbar
+                const animationSection = document.createElement('div');
+                animationSection.className = 'toolbar-section';
+                animationSection.innerHTML = `
+                    <button id="captureFrame" class="tooltip" data-tooltip="Capture current state as animation frame">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        Capture Frame
+                    </button>
+                    <button id="showAnimation" class="tooltip" data-tooltip="Play animation">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                        Run Animation
+                    </button>
+                `;
+                
+                // Insert after the last toolbar section
+                const toolbar = document.querySelector('.toolbar');
+                toolbar.appendChild(animationSection);
+                
+                // Add event listeners for animation buttons
+				document.getElementById('captureFrame').addEventListener('click', () => {
+					// Store the current state as a frame
+					const frame = {
+						shapes: JSON.parse(JSON.stringify(this.shapes.map(shape => {
+							// Remove functions from the clone
+							let clone = {...shape};
+							delete clone.draw;
+							delete clone.isInside;
+							return clone;
+						}))),
+						fieldType: this.fieldType
+					};
+					
+					this.animationFrames.push(frame);
+					showStatusMessage(`Frame ${this.animationFrames.length} captured`);
+				});
+				
+				document.getElementById('showAnimation').addEventListener('click', () => {
+					this.startAnimation();
+				});
+				
+				// Add click handlers for color indicators
+				setTimeout(() => {
+					document.querySelectorAll('.toolbar button .color-indicator').forEach(indicator => {
+						indicator.addEventListener('click', (e) => {
+							e.stopPropagation(); // Prevent the parent button from being clicked
+							const buttonId = e.target.parentElement.id;
+							this.preSelectColor(buttonId);
+							console.log('Color indicator clicked for:', buttonId);
+						});
+					});
+				}, 100);
+			}
+			
+			debugCanvas() {
+				console.log('Running canvas debug test');
+				
+				// Try direct drawing to test canvas
+				const ctx = this.canvas.getContext('2d');
+				
+				// Save any existing transforms
+				ctx.save();
+				
+				// Reset to identity transform and draw in overlay
+				ctx.setTransform(1, 0, 0, 1, 0, 0);
+				
+				// Draw test shapes
+				ctx.fillStyle = 'rgba(255,0,0,0.5)';
+				ctx.fillRect(20, 20, 50, 50);
+				
+				ctx.fillStyle = 'rgba(0,0,255,0.5)';
+				ctx.fillRect(80, 80, 50, 50);
+				
+				ctx.fillStyle = 'rgba(0,255,0,0.5)';
+				ctx.fillRect(140, 140, 50, 50);
+				
+				// Draw shapes count
+				ctx.fillStyle = 'rgba(0,0,0,0.7)';
+				ctx.fillRect(10, 200, 150, 40);
+				ctx.fillStyle = 'white';
+				ctx.font = '14px Arial';
+				ctx.fillText(`Shapes: ${this.shapes.length}`, 20, 220);
+				
+				// Restore previous transform
+				ctx.restore();
+				
+				console.log('Debug test complete');
+				console.log('Shape count:', this.shapes.length);
+			}
+			
         }
+
+			// Single initialization approach
+			let appInitialized = false;
+			
+			function initializeApp() {
+				if (appInitialized) return;
+				appInitialized = true;
+				
+				window.soccerCoachApp = new SoccerCoachApp();
+				console.log('App initialized successfully');
+			}
+
+			document.addEventListener('DOMContentLoaded', initializeApp);
+			
+			// Optional backup initialization with a longer timeout
+			setTimeout(function() {
+				if (!window.soccerCoachApp) {
+					console.log('Backup initialization triggered');
+					initializeApp();
+				}
+			}, 1500);
+		
     </script>
 </body>
 </html>
